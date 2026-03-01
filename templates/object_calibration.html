@@ -505,17 +505,19 @@
 
 
 
-    {% if red_wcs_path %}
-    <div class="plot-card">
-        <h3>Red WCS Check</h3>
-        <img src="{{ url_for('static', filename=red_wcs_path.split('/')[-1]) }}">
-    </div>
-    {% endif %}
+ 
 
     {% if green_wcs_path %}
     <div class="plot-card">
         <h3>Green WCS Check</h3>
         <img src="{{ url_for('static', filename=green_wcs_path.split('/')[-1]) }}">
+    </div>
+    {% endif %}
+
+    {% if red_wcs_path %}
+    <div class="plot-card">
+        <h3>Red WCS Check</h3>
+        <img src="{{ url_for('static', filename=red_wcs_path.split('/')[-1]) }}">
     </div>
     {% endif %}
 

@@ -749,39 +749,98 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
 
     update_progress(1, "Detecting stars in green and red images...")
 
-    # === GREEN WCS CHECK ===
-    vmin_g, vmax_g = np.percentile(image_data_g, [5, 99])
+ # === GREEN WCS CHECK ===
+
+    # Unified higher-contrast percentile clamp
+    pmin, pmax = np.percentile(image_data_g, [20, 80])
+
+    # ZScale limits
+    z = ZScaleInterval()
+    zmin, zmax = z.get_limits(image_data_g)
+
+    # Blended limits (same for both images)
+    vmin = max(zmin, pmin)
+    vmax = min(zmax, pmax)
+
+    norm_g = ImageNormalize(
+        image_data_g,
+        vmin=vmin,
+        vmax=vmax,
+        stretch=AsinhStretch()
+    )
 
     fig = plt.figure(figsize=(10,8))
     ax = plt.subplot(projection=w_g)
-    norm = ImageNormalize(image_data_g, interval=ZScaleInterval(), stretch=AsinhStretch())
-    ax.imshow(image_data_g, cmap="gray", origin="lower", norm=norm)
+    ax.coords[1].set_axislabel_position('l') 
+    ax.coords[1].set_ticklabel_position('l')
+    ax.imshow(image_data_g, cmap="gray", origin="lower", norm=norm_g)
 
-    ax.scatter(x_pixel_g, y_pixel_g, s=30, edgecolor='red', facecolor='none', linewidth=0.8)
+  # Calibration Stars marked
+    for xg, yg in zip(x_pixel_g, y_pixel_g):
+        ax.add_patch(plt.Circle(
+            (xg, yg),
+            radius=20,                 # slightly bigger
+            edgecolor='#5A0000',       # darker red
+            facecolor='none',
+            linewidth=0.9,
+            alpha=0.6
+        ))
+
+    # Target star unchanged
     target_g_x, target_g_y = w_g.all_world2pix(RA, DEC, 1)
-    ax.add_patch(plt.Circle((target_g_x, target_g_y), 25, edgecolor='black', facecolor='none', linewidth=0.8))
+    ax.add_patch(plt.Circle((target_g_x, target_g_y), 25,
+                            edgecolor='black', facecolor='none', linewidth=0.8))
     ax.text(target_g_x + 10, target_g_y + 10, "Target", color='black')
 
     plt.title("GREEN WCS Check: APASS stars + Target")
     plt.savefig("static/green_wcs_check.png", dpi=150, bbox_inches="tight")
     plt.close()
 
-   # === RED WCS CHECK ===
-    vmin_r, vmax_r = np.percentile(image_data_r, [5, 99])
+
+
+    # === RED WCS CHECK ===
+
+    # Use the SAME contrast settings for red image
+    pmin, pmax = np.percentile(image_data_r, [20, 80])
+    z = ZScaleInterval()
+    zmin, zmax = z.get_limits(image_data_r)
+    vmin = max(zmin, pmin)
+    vmax = min(zmax, pmax)
+
+    norm_r = ImageNormalize(
+        image_data_r,
+        vmin=vmin,
+        vmax=vmax,
+        stretch=AsinhStretch()
+    )
 
     fig = plt.figure(figsize=(10,8))
     ax = plt.subplot(projection=w_r)
-    norm = ImageNormalize(image_data_r, interval=ZScaleInterval(), stretch=AsinhStretch())
-    ax.imshow(image_data_r, cmap="gray", origin="lower", norm=norm)
+    ax.coords[1].set_axislabel_position('l') 
+    ax.coords[1].set_ticklabel_position('l')
+    ax.imshow(image_data_r, cmap="gray", origin="lower", norm=norm_r)
 
-    ax.scatter(x_pixel_r, y_pixel_r, s=30, edgecolor='cyan', facecolor='none', linewidth=0.8)
+    # Calibration stars: slightly bigger, opacity 0.6, darker blue-green
+    for xr, yr in zip(x_pixel_r, y_pixel_r):
+        ax.add_patch(plt.Circle(
+            (xr, yr),
+            radius=20,                 # slightly bigger
+            edgecolor='#004F4F',       # darker cyan/teal
+            facecolor='none',
+            linewidth=0.9,
+            alpha=0.6
+        ))
+
+    # Target star unchanged
     target_r_x, target_r_y = w_r.all_world2pix(RA, DEC, 1)
-    ax.add_patch(plt.Circle((target_r_x, target_r_y), 25, edgecolor='black', facecolor='none', linewidth=0.8))
+    ax.add_patch(plt.Circle((target_r_x, target_r_y), 25,
+                            edgecolor='black', facecolor='none', linewidth=0.8))
     ax.text(target_r_x + 10, target_r_y + 10, "Target", color='black')
 
     plt.title("RED WCS Check: APASS stars + Target")
     plt.savefig("static/red_wcs_check.png", dpi=150, bbox_inches="tight")
     plt.close()
+
 
 
     
@@ -984,10 +1043,10 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
             "N/A",  # standard r
             "N/A",  # error g
             "N/A",  # error r
-            round(Tgr, 4),
-            round(Cgr, 4),
-            round(Tg, 4),
-            round(Cg, 4),  
+            None,
+            None,
+            None,
+            None,  
             color_term_path,
             green_offset_path,
             red_wcs_path,
