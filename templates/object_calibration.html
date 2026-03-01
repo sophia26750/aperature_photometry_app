@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            background-color: #000;
+            color: #eee;
+            font-family: Arial, Helvetica, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .copy-btn {
+        padding: 6px 14px;
+        margin-left: 10px;
+        border: none;
+        border-radius: 20px;
+        background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+        color: #9cf;
+        font-size: 13px;
+        font-family: monospace;
+        cursor: pointer;
+        transition: 0.2s ease;
+        box-shadow: 0 0 6px rgba(0, 150, 255, 0.25);
+    }
+
+    .copy-btn:hover {
+        background: #0a84ff;
+        color: #fff;
+        box-shadow: 0 0 10px rgba(0, 150, 255, 0.6);
+        transform: translateY(-1px);
+    }
+
+    .copy-btn:active {
+        transform: scale(0.96);
+        box-shadow: 0 0 4px rgba(0, 150, 255, 0.4);
+    }
+
+
+        a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            opacity: 0.85;
+        }
+        a:hover {
+            opacity: 1;
+        }
+
+        h1, h2, h3 {
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #333;
+            width: 80%;
+            margin: 30px auto;
+        }
+
+        /* Form container */
+        form {
+            width: 70%;
+            margin: 0 auto;
+            padding: 25px;
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.05);
+        }
+
+        label {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            margin: 10px 0 20px 0;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background-color: #000;
+            color: #eee;
+        }
+
+        input[type="file"] {
+            margin: 10px 0 20px 0;
+            font-size: 16px;
+            color: #ccc;
+        }
+
+        button[type="submit"] {
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: none;
+            background-color: #444;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s ease;
+            margin-top: 10px;
+        }
+        button[type="submit"]:hover {
+            background-color: #666;
+        }
+
+        /* Status line */
+        #status-line {
+            margin-top: 10px;
+            font-family: monospace;
+            color: #0f0;
+            font-size: 15px;
+        }
+
+        /* Results container */
+        .results-box {
+            width: 70%;
+            margin: 40px auto;
+            padding: 25px;
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.05);
+            text-align: center;
+        }
+
+        /* Plot containers */
+        .plot-card {
+            width: 70%;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.08);
+        }
+
+        .plot-card img {
+            width: 90%;
+            border-radius: 6px;
+            border: 1px solid #555;
+            box-shadow: 0 0 12px rgba(255,255,255,0.15);
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="/">← Back to Home</a>
+    <br><br>
+
+    <h1>Object Analysis Page</h1>
+    <p>You can perform photometry on one object here.</p>
+
+    <hr>
+
+    <p style="font-size: 20px; margin: 20px 0;">
+        Please input the Right Ascension and Declination of your Target Object:
+    </p>
+
+    <form method="POST" enctype="multipart/form-data">
+
+        <h2>Enter Target Coordinates</h2>
+
+        <!-- Decimal input -->
+        <label>RA (decimal degrees):</label><br>
+        <input type="text" name="ra_decimal" placeholder="e.g. 198.36617"><br>
+
+        <label>Dec (decimal degrees):</label><br>
+        <input type="text" name="dec_decimal" placeholder="e.g. 36.586586"><br>
+
+        <p>OR</p>
+
+        <!-- Sexagesimal input -->
+        <label>RA (HMS):</label><br>
+        <input type="text" name="ra_hms" placeholder="e.g. 13h 14m 38.8s"><br>
+
+        <label>Dec (DMS):</label><br>
+        <input type="text" name="dec_dms" placeholder="e.g. +36° 35′ 11.7″"><br>
+
+        <hr>
+
+        <h2>Calibration Star Selection</h2>
+
+        <label for="calibration_mode">Choose calibration stars:</label><br>
+        <select name="calibration_mode" id="calibration_mode" 
+                style="padding: 10px; margin: 10px 0 20px 0; font-size: 16px; 
+                    border-radius: 6px; border: 1px solid #444; 
+                    background-color: #000; color: #eee; width: 50%;"
+                onchange="toggleCustomCalibration()">
+            <option value="all">Use all available stars</option>
+            <option value="custom">Choose a custom number</option>
+        </select>
+
+        <br>
+
+        <div id="custom_calibration_block" style="display:none;">
+            <label for="calibration_count">Number of calibration stars:</label><br>
+            <input type="number" name="calibration_count" min="1"
+                style="width: 40%; padding: 10px; margin: 10px 0 20px 0;
+                        font-size: 16px; border-radius: 6px; border: 1px solid #444;
+                        background-color: #000; color: #eee;">
+        </div>
+
+        <script>
+        function toggleCustomCalibration() {
+            const mode = document.getElementById("calibration_mode").value;
+            document.getElementById("custom_calibration_block").style.display =
+                mode === "custom" ? "block" : "none";
+        }
+        </script>
+
+
+        <label>Photometric system:</label>
+        <select name="phot_system">
+                <option value="sloan">Sloan g/r</option>
+                <option value="johnson">Johnson B/V</option>
+        </select>
+
+
+        <h2>Provide Sloan g and r Images</h2>
+
+        <label>Enter Sloan g image path:</label><br>
+        <input type="text" name="g_link_both"><br>
+
+        <label>Enter Sloan r image path:</label><br>
+        <input type="text" name="r_link_both"><br>
+
+        <p>OR upload FITS files:</p>
+
+        <label>Upload Sloan g FITS:</label><br>
+        <input type="file" name="g_file" accept=".fits"><br>
+
+        <label>Upload Sloan r FITS:</label><br>
+        <input type="file" name="r_file" accept=".fits"><br>
+
+        <button type="submit">Run Calibration</button>
+
+    </form>
+
+    <hr>
+
+    <p style="font-size: 15px; margin: 10px 0;">
+        <span style="font-weight: bold;">Progress of photometry:</span><br>
+    </p>
+
+    <div id="status-line"></div>
+
+    <!-- {% if error_message %}
+        <p class="error">{{ error_message }}</p>
+    {% endif %} -->
+    <!-- <script>
+        function pollStatus() {
+            fetch("/progress_status")
+                .then(response => response.text())
+                .then(text => {
+                    const statusLine = document.getElementById("status-line");
+                    statusLine.textContent = text;
+
+                    // Only change color, do NOT stop printing anything
+                    if (
+                        text.includes("Please enter RA/Dec in either decimal or HMS/DMS format.") ||
+                        text.includes("outside the image boundaries")
+                    ) {
+                        statusLine.style.color = "#ff4444";   // red
+                    } else {
+                        statusLine.style.color = "#00ff00";   // green
+                    }
+                });
+        }
+        setInterval(pollStatus, 700);
+    </script> -->
+
+    <script>
+    function pollStatus() {
+        fetch("/status")
+            .then(response => response.text())
+            .then(text => {
+                const statusLine = document.getElementById("status-line");
+                statusLine.textContent = text;
+
+                if (
+                    text.includes("Please enter RA/Dec") ||
+                    text.includes("outside the image boundaries") ||
+                    text.includes("The target star could not be measured.")
+                ) {
+                    statusLine.style.color = "#ff4444";
+                } else {
+                    statusLine.style.color = "#00ff00";
+                }
+            });
+    }
+    setInterval(pollStatus, 700);
+    </script>
+
+
+
+
+    <div style="width:70%; margin:20px auto;">
+        <div id="progress-container"
+            style="width:100%; height:28px; background:#222; border:1px solid #444;
+                    border-radius:10px; position:relative; overflow:hidden;">
+
+            <!-- Filling bar -->
+            <div id="progress-bar"
+                style="height:100%; width:0%; background:#0f0; transition:width 0.3s;">
+            </div>
+
+            <!-- Text inside bar -->
+            <div id="progress-text"
+                style="position:absolute; top:0; left:0; width:100%; height:100%;
+                        display:flex; align-items:center; justify-content:center;
+                        font-family:monospace; font-size:14px; color:#eee;">
+                Waiting...
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function pollProgress() {
+        fetch("/progress_status")
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById("progress-bar").style.width = data.progress + "%";
+                document.getElementById("progress-text").textContent = data.message;
+            });
+    }
+    setInterval(pollProgress, 700);
+    </script>
+
+
+
+
+
+    <!-- <script>
+        function pollStatus() {
+            fetch("/progress_status")
+                .then(response => response.text())
+                .then(text => {
+                    document.getElementById("status-line").textContent = text;
+                });
+        }
+        setInterval(pollStatus, 700);
+    </script> -->
+
+    <script>
+    function copyToClipboard(value) {
+        navigator.clipboard.writeText(value)
+            .then(() => {
+                console.log("Copied:", value);
+            })
+            .catch(err => {
+                console.error("Copy failed:", err);
+            });
+    }
+    </script>
+
+
+
+    {% if standard_g_target and standard_r_target %}
+        <div class="results-box">
+            <h3>Photometric Analysis Results</h3> <br>
+
+            {% if g_path_name or g_text or r_path_name or r_text %}
+            <p style="font-size: 12px; opacity: 0.55; margin-top: 10px; font-style: italic;">
+                <strong>Submitted Images:</strong><br>
+
+                {% if g_path_name %}
+                    Green: {{ g_path_name }}<br>
+                {% elif g_text %}
+                    Green: {{ g_text }}<br>
+                {% endif %}
+
+                {% if r_path_name %}
+                    Red: {{ r_path_name }}<br>
+                {% elif r_text %}
+                    Red: {{ r_text }}<br>
+                {% endif %}
+            </p>
+            {% endif %}
+
+            <br>
+
+            <div style="margin-bottom: 15px; font-size: 18px;">
+                <span style="opacity: 0.85;">Target Coordinates</span><br>
+                <span style="font-size: 20px; color: #9cf;">
+                    RA: {{ ra_deg }}°<br>
+                    Dec: {{ dec_deg }}°
+                </span>
+            </div>
+
+            <!-- Standard g -->
+            <p>
+                <strong>Standard g Magnitude:</strong>
+                <span style="color:#7ab8ff;">{{ standard_g_target }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ standard_g_target }}')">Copy</button>
+            </p>
+
+            <!-- Standard r -->
+            <p>
+                <strong>Standard r Magnitude:</strong>
+                <span style="color:#7ab8ff;">{{ standard_r_target }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ standard_r_target }}')">Copy</button>
+            </p>
+
+            <!-- Error g -->
+            <p>
+                <strong>Error in g:</strong>
+                <span style="color:#7ab8ff;">{{ error_g }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ error_g }}')">Copy</button>
+            </p>
+
+            <!-- Error r -->
+            <p>
+                <strong>Error in r:</strong>
+                <span style="color:#7ab8ff;">{{ error_r }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ error_r }}')">Copy</button>
+            </p>
+
+            <br>
+
+            <p>Accuracy of stars:<br>
+            <i>*NOTE* Tgr should be close to 1, and Cgr and Tg should be close to 0.</i></p>
+
+            <!-- Tgr -->
+            <p>
+                <strong>Tgr (Color Term g–r):</strong>
+                <span style="color:#7ab8ff;">{{ Tgr }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ Tgr }}')">Copy</button>
+            </p>
+
+            <!-- Cgr -->
+            <p>
+                <strong>Cgr (Intercept g–r):</strong>
+                <span style="color:#7ab8ff;">{{ Cgr }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ Cgr }}')">Copy</button>
+            </p>
+
+            <!-- Tg -->
+            <p>
+                <strong>Tg (Green Zero‑Point Slope):</strong>
+                <span style="color:#7ab8ff;">{{ Tg }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ Tg }}')">Copy</button>
+            </p>
+
+            <!-- Cg -->
+            <p>
+                <strong>Cg (Green Zero‑Point Intercept):</strong>
+                <span style="color:#7ab8ff;">{{ Cg }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ Cg }}')">Copy</button>
+            </p>
+        </div>
+
+        </div>
+
+
+        {% if last_target_name %}
+        <div class="results-box">
+            <h3>Identified Target Star</h3>
+            <p style="font-size: 20px; color: #9cf;">
+                {{ last_target_name }}
+            </p>
+            <p style="opacity: 0.8; font-size: 14px;">
+                (This name may not be 100% suitable for AAVSO submissions. If not, please double check with Google!)
+            </p>
+        </div>
+        {% endif %}
+
+
+
+
+    {% if combined_wcs_path %}
+    <div class="plot-card">
+        <h3>Here is the target object and its aperture</h3>
+        <img src="{{ url_for('static', filename=combined_wcs_path.split('/')[-1]) }}">
+    </div>
+    {% endif %}
+
+
+
+    <div style="margin-top:40px;">
+        <a href="/aavso_instructions"
+        style="display:inline-block; padding:14px 30px; 
+                background:#1a1a1a; border:1px solid #555;
+                border-radius:8px; color:#fff; font-size:20px;
+                text-decoration:none; font-weight:bold;
+                transition:0.2s ease;">
+            Submit Data to AAVSO →
+        </a>
+    </div>
+    {% endif %}
+
+    {% if last_target_cutout %}
+    <div class="plot-card">
+        <h3>Target Star Cutout</h3>
+        <img src="{{ url_for('static', filename=last_target_cutout.split('/')[-1]) }}"
+            alt="Target Cutout">
+    </div>
+    {% endif %}
+
+
+
+    {% if red_wcs_path %}
+    <div class="plot-card">
+        <h3>Red WCS Check</h3>
+        <img src="{{ url_for('static', filename=red_wcs_path.split('/')[-1]) }}">
+    </div>
+    {% endif %}
+
+    {% if green_wcs_path %}
+    <div class="plot-card">
+        <h3>Green WCS Check</h3>
+        <img src="{{ url_for('static', filename=green_wcs_path.split('/')[-1]) }}">
+    </div>
+    {% endif %}
+
+
+
+    {% if color_term_path %}
+    <div class="plot-card">
+        <h3>Color Calibration Plot</h3>
+        <img src="{{ url_for('static', filename=color_term_path.split('/')[-1]) }}">
+    </div>
+    {% endif %}
+
+    {% if green_offset_path %}
+    <div class="plot-card">
+        <h3>Green Offset Calibration Plot</h3>
+        <img src="{{ url_for('static', filename=green_offset_path.split('/')[-1]) }}">
+    </div>
+    {% endif %}
+
+    <br><br>
+    <br><br>
+  
+
+    
+
+    <br><br>
+    <br><br>
+    <br><br>
+    <br><br>
+    <br><br>
+    <br><br>
+    <br><br>
+    <br><br>
+
+
+
+</body>
+</html>
