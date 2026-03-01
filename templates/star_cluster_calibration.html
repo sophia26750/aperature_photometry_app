@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            background-color: #000;
+            color: #eee;
+            font-family: Arial, Helvetica, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            opacity: 0.85;
+        }
+        a:hover {
+            opacity: 1;
+        }
+
+        h1, h2, h3 {
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #333;
+            width: 80%;
+            margin: 30px auto;
+        }
+
+        /* Form container */
+        form {
+            width: 70%;
+            margin: 0 auto;
+            padding: 25px;
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.05);
+        }
+
+        label {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            margin: 10px 0 20px 0;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background-color: #000;
+            color: #eee;
+        }
+
+        input[type="file"] {
+            margin: 10px 0 20px 0;
+            font-size: 16px;
+            color: #ccc;
+        }
+
+        button[type="submit"] {
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: none;
+            background-color: #444;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s ease;
+            margin-top: 10px;
+        }
+        button[type="submit"]:hover {
+            background-color: #666;
+        }
+
+        /* Status line */
+        #status-line {
+            margin-top: 10px;
+            font-family: monospace;
+            color: #0f0;
+            font-size: 15px;
+        }
+
+        /* Results container */
+        .results-box {
+            width: 70%;
+            margin: 40px auto;
+            padding: 25px;
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.05);
+            text-align: center;
+        }
+
+        /* Plot containers */
+        .plot-card {
+            width: 70%;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.08);
+        }
+
+        .plot-card img {
+            width: 90%;
+            border-radius: 6px;
+            border: 1px solid #555;
+            box-shadow: 0 0 12px rgba(255,255,255,0.15);
+        }
+
+        .error {
+            color: #ff6b6b;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="/">← Back to Home</a>
+    <br><br>
+
+    <h1>Star Cluster Calibration</h1>
+    <p>Upload Sloan g and r images and enter the cluster coordinates.</p>
+
+    <hr>
+
+    <p style="font-size: 20px; margin: 20px 0;">
+        Enter the Right Ascension, Declination, and Cluster Radius:
+    </p>
+
+    <form method="POST" enctype="multipart/form-data">
+
+        <h2>Cluster Coordinates</h2>
+
+        <label>RA (decimal degrees):</label><br>
+        <input type="text" name="ra_decimal" placeholder="e.g. 301.7333"><br>
+
+        <label>Dec (decimal degrees):</label><br>
+        <input type="text" name="dec_decimal" placeholder="e.g. 35.8492"><br>
+
+        <p>OR</p>
+
+        <label>RA (HMS):</label><br>
+        <input type="text" name="ra_hms" placeholder="e.g. 20h 06m 56s"><br>
+
+        <label>Dec (DMS):</label><br>
+        <input type="text" name="dec_dms" placeholder="e.g. +35° 50′ 57″"><br>
+
+        <hr>
+
+        <h2>Cluster Radius</h2>
+        <label>Cluster radius (arcminutes):</label><br>
+        <input type="text" name="cluster_radius_arcmin" placeholder="e.g. 20"><br>
+
+        <hr>
+
+        <h2>Provide Sloan g and r Images</h2>
+
+        <label>Enter Sloan g image path:</label><br>
+        <input type="text" name="g_link"><br>
+
+        <label>Enter Sloan r image path:</label><br>
+        <input type="text" name="r_link"><br>
+
+        <p>OR upload FITS files:</p>
+
+        <label>Upload Sloan g FITS:</label><br>
+        <input type="file" name="g_file" accept=".fits"><br>
+
+        <label>Upload Sloan r FITS:</label><br>
+        <input type="file" name="r_file" accept=".fits"><br>
+
+        <button type="submit">Run Cluster Calibration</button>
+
+    </form>
+
+    <hr>
+
+    <!-- LIVE STATUS LINE -->
+    <p style="font-size: 15px; margin: 10px 0;">
+        <span style="font-weight: bold;">Progress of calibration:</span><br>
+    </p>
+
+    <div id="status-line"></div>
+
+    <script>
+        function pollStatus() {
+            fetch("/status")
+                .then(response => response.text())
+                .then(text => {
+                    const statusLine = document.getElementById("status-line");
+                    statusLine.textContent = text;
+
+                    // Only change color, do NOT stop printing anything
+                    if (
+                        text.includes("Please enter RA/Dec in either decimal or HMS/DMS format.") ||
+                        text.includes("outside the image boundaries") ||
+                        text.includes("Please enter a cluster radius in arcminutes.")
+                    ) {
+                        statusLine.style.color = "#ff4444";   // red
+                    } else {
+                        statusLine.style.color = "#00ff00";   // green
+                    }
+                });
+        }
+        setInterval(pollStatus, 700);
+    </script>
+
+
+    <script>
+        function pollStatus() {
+            fetch("/status")
+                .then(response => response.text())
+                .then(text => {
+                    document.getElementById("status-line").textContent = text;
+                });
+        }
+        setInterval(pollStatus, 700);
+    </script>
+
+    {% if error_message %}
+        <p class="error">{{ error_message }}</p>
+    {% endif %}
+
+    <div style="margin-top:20px;">
+        <h3>Cluster Calibration Results</h3>
+
+    {% if Tgr %}
+        <div class="results-box">
+            <h3>Calibration Coefficients</h3>
+            <p>
+                Tgr (Color Term): {{ Tgr }}<br>
+                Cgr (Color Intercept): {{ Cgr }}<br>
+                Tg  (Green Slope): {{ Tg }}<br>
+                Cg  (Green Intercept): {{ Cg }}<br>
+            </p>
+        </div>
+
+        {% if cmd_path %}
+        <div class="plot-card">
+            <h3>Color–Magnitude Diagram</h3>
+            <img src="/{{ cmd_path }}" alt="CMD Plot">
+        </div>
+        {% endif %}
+
+        {% if overlay_path %}
+            <div class="plot-card">
+                <h3>Cluster Overlay</h3>
+                <img src="{{ url_for('static', filename='cluster_overlay.png') }}"
+                    alt="Cluster Overlay"
+                    class="img-fluid rounded shadow">
+            </div>
+        {% endif %}
+
+        
+
+
+        {% if color_path %}
+        <div class="plot-card">
+            <h3>Color Calibration Plot</h3>
+            <img src="/{{ color_path }}" alt="Color Calibration">
+        </div>
+        {% endif %}
+
+        {% if offset_path %}
+        <div class="plot-card">
+            <h3>Green Offset Plot</h3>
+            <img src="/{{ offset_path }}" alt="Green Offset">
+        </div>
+        {% endif %}
+
+
+    {% endif %}
+
+</body>
+</html>

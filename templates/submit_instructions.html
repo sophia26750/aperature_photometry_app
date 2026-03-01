@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AAVSO Submission Guide</title>
+    <style>
+        body {
+            background-color: #000;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #f2f2f2;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 80px 20px;
+            text-align: left;
+        }
+
+        h1 {
+            font-size: 50px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 22px;
+            margin-bottom: 40px;
+            opacity: 0.85;
+        }
+
+        h2 {
+            font-size: 32px;
+            margin-top: 50px;
+            margin-bottom: 15px;
+            font-weight: 500;
+            color: #e6e6e6;
+        }
+
+        h3 {
+            font-size: 24px;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            font-weight: 400;
+            color: #dcdcdc;
+        }
+
+        p {
+            font-size: 20px;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        ul {
+            margin-top: 10px;
+            margin-bottom: 25px;
+            padding-left: 20px;
+        }
+
+        li {
+            font-size: 19px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        a {
+            color: #7ab8ff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .highlight-box {
+            background-color: #111;
+            border: 1px solid #333;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.05);
+            font-size: 19px;
+        }
+
+        .home-button {
+            display: inline-block;
+            margin-top: 50px;
+            padding: 16px 32px;
+            background-color: white;
+            color: black;
+            font-size: 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s ease;
+        }
+
+        .home-button:hover {
+            background-color: #dcdcdc;
+        }
+
+        .footer-note {
+            margin-top: 60px;
+            text-align: center;
+            font-size: 18px;
+            opacity: 0.7;
+        }
+
+        .copy-btn {
+            margin-left: 12px;
+            padding: 4px 10px;
+            font-size: 14px;
+            background-color: #222;
+            color: #f2f2f2;
+            border: 1px solid #444;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background-color: #333;
+        }
+
+        .plot-card {
+            width: 70%;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.08);
+        }
+
+        .plot-card img {
+            width: 90%;
+            border-radius: 6px;
+            border: 1px solid #555;
+            box-shadow: 0 0 12px rgba(255,255,255,0.15);
+        }
+
+
+    </style>
+</head>
+
+
+<script>
+    function copyToClipboard(value) {
+        navigator.clipboard.writeText(value)
+            .then(() => {
+                console.log("Copied:", value);
+            })
+            .catch(err => {
+                console.error("Copy failed:", err);
+            });
+    }
+</script>
+
+
+<body>
+    <div style="text-align:center; margin-top:20px;">
+    <a href="/" style="
+        color:#fff;
+        text-decoration:none;
+        font-size:16px;
+        opacity:0.85;
+    ">
+        ← Back to Home
+    </a>
+</div>
+
+    <br><br>
+
+<div class="container">
+    
+    
+
+    <h1>AAVSO Submission Guide</h1>
+    <p class="subtitle">How to submit your calibrated photometry to the AAVSO International Database</p>
+
+    <div class="highlight-box">
+        <strong>Your photometry pipeline already produces everything required for AAVSO submission:</strong>
+        calibrated magnitudes, uncertainties, RA/Dec, and WCS‑verified photometry.
+    </div>
+
+    <div class="highlight-box" style="margin-top:25px;">
+        <strong>Why submit your data to the AAVSO?</strong>
+        <ul style="margin-top:10px; text-align:left; font-size:18px; line-height:1.5;">
+            <li>Your calibrated measurements become part of a global scientific database used by researchers and observatories.</li>
+            <li>AAVSO observers fill gaps that professional telescopes cannot cover, especially long‑term monitoring.</li>
+            <li>Your data can trigger real scientific follow‑ups, including spectroscopy and space‑telescope observations.</li>
+            <li>Every submission is permanently archived and credited to your observer code.</li>
+        </ul>
+
+        <strong>Why use AAVSO data?</strong>
+        <ul style="margin-top:10px; text-align:left; font-size:18px; line-height:1.5;">
+            <li>AAVSO holds over a century of light curves — the most complete public archive of stellar variability.</li>
+            <li>You can compare your measurements to global datasets to validate your calibration.</li>
+            <li>Long‑term data helps you study variability, detect outbursts, and understand stellar behavior.</li>
+            <li>You can choose scientifically valuable targets based on real observational needs.</li>
+        </ul>
+    </div>
+
+
+    <h2>1. Prepare Your Photometric Results</h2>
+    <p>You will need:</p>
+    <ul>
+        <li>Calibrated g and r magnitudes</li>
+        <li>Magnitude uncertainties</li>
+        <li>RA/Dec of the target</li>
+        <li>Your AAVSO observer code</li>
+    </ul>
+
+
+    <hr>
+
+    <h2>2. Generate an AAVSO Finder Chart</h2>
+    <p>Use the AAVSO Variable Star Plotter (VSP):</p>
+    <ul>
+        <li>Go to <a href="https://www.aavso.org/vsp" target="_blank">https://www.aavso.org/vsp</a></li>
+        <li>
+            Enter your target name or RA/Dec  
+            {% if ra_hms and dec_dms %}
+                <div style="margin-top:10px; font-size:18px;">
+
+                    <strong style="color:#7ab8ff;">RA (HH:MM:SS):</strong> {{ ra_hms }}
+                    <button class="copy-btn" onclick="copyToClipboard('{{ ra_hms }}')">Copy</button>
+                    <br>
+
+                    <strong style="color:#7ab8ff;">Dec (DD:MM:SS):</strong> {{ dec_dms }}
+                    <button class="copy-btn" onclick="copyToClipboard('{{ dec_dms }}')">Copy</button>
+
+                    <p style="opacity:0.7; margin-top:8px;">
+                        These coordinates were automatically converted from your target’s RA/Dec.
+                    </p>
+                </div>
+            {% else %}
+                <div style="margin-top:10px; font-size:18px; color:#888;">
+                    (Coordinates will appear here after running photometry.)
+                </div>
+            {% endif %}
+        </li>
+
+        <li>Select Chart Scale: <strong>E</strong></li>
+        <li>Orientation: <strong>CCD</strong></li>
+        <li>Chart or Photometry: <strong>Chart</strong></li>
+        <li>Leave “Chart ID” blank unless reproducing an old chart</li>
+        <li>Press Plot Chart</li>
+
+        <div class="plot-card">
+            <h3>Here is an example of how you should input your information into "Plot a Quick Chart"</h3>
+            <img src="{{ url_for('static', filename='AAVSO_1.jpg') }}">
+        </div>
+
+    </ul>
+
+    <p>After generating the chart, record:</p>
+    <ul>
+        <li><strong>Chart ID</strong> (top‑right corner)</li>
+        <li><strong>Comparison star label</strong> (e.g., 123 → mag 12.3)</li>
+        <li><strong>Check star label</strong></li>
+    </ul>
+
+    <div class="plot-card">
+        <h3>This is what it should look like. Notice how there are no numbers IN the box with dots, if this happens, change "Chart Scale: E" to D. If you still can't find any numbers, keep going up until A.</h3>
+        <img src="{{ url_for('static', filename='AAVSO_2.jpg') }}">
+
+        <br><br>
+
+        <h3>This is when I increased the chart scale from E to C, notice how now there are 2 stars that has numerical values? Those will be your STAR LABELS. You need at least TWO.</h3>
+        <img src="{{ url_for('static', filename='AAVSO_3.jpg') }}">
+
+    </div>
+
+
+    <hr>
+
+
+    <h2>3. Log In to WebObs</h2>
+    <p>Follow these steps to reach the correct AAVSO submission page:</p>
+
+    <ol style="font-size:20px; line-height:1.7; opacity:0.9;">
+
+        <li>
+            Go to 
+            <a href="https://www.aavso.org/webobs" target="_blank">
+                https://www.aavso.org/webobs
+            </a>.
+        </li>
+
+        <li>
+            Scroll until you see the section titled <strong>Submit</strong>.  
+            Under it, click <strong>Individual Observations</strong>.
+        </li>
+
+        <li>
+            Scroll all the way down.  
+            If you are <strong>not logged in</strong>, click <strong>“Click here to login.”</strong><br>
+            If you <strong>are logged in</strong> but do not have an observer code linked to your account, click  
+            <strong>“Click here to get an observer code or link to your old account.”</strong>  
+            (It’s free and automatic.)
+        </li>
+
+        <li>
+            After clicking, you should see a page asking for your observer code.  
+            If instead you see <strong>“Not Found”</strong>, press <strong>Return Home</strong> — it will take you to the correct page.
+        </li>
+
+        <li>
+            On the left‑hand menu, find <strong>Submit Data</strong> and click <strong>Photometry</strong>.
+        </li>
+
+        <li>
+            You will now see two options:
+            <ul>
+                <li><strong>Manual</strong> — best for single observations</li>
+                <li><strong>File Upload</strong> — best for many observations at once</li>
+            </ul>
+            For this website’s workflow, choose <strong>Manual</strong>.
+        </li>
+
+    </ol>
+
+    <!-- END OF STEP 3 -->
+
+    <hr style="border:0; border-top:1px solid #333; margin:50px 0;">
+
+    <h2>Convert Your Observation Date to Julian Date</h2>
+
+    <p style="opacity:0.9; font-size:20px;">
+        Enter the date and time you took your image.  
+        This will automatically convert it to Julian Date for AAVSO submission.
+    </p>
+
+    <form action="/calculate_jd" method="POST" style="margin-top:20px;">
+
+        <label style="font-size:18px;">Observation Date (YYYY-MM-DD):</label><br>
+        <input type="text" name="obs_date" placeholder="2026-02-10"
+            style="padding:10px; width:250px; margin-bottom:15px; border-radius:6px; border:1px solid #444; background:#111; color:#f2f2f2;"><br>
+
+        <label style="font-size:18px;">Observation Time (HH:MM:SS UTC):</label><br>
+        <input type="text" name="obs_time" placeholder="03:15:00"
+            style="padding:10px; width:250px; margin-bottom:20px; border-radius:6px; border:1px solid #444; background:#111; color:#f2f2f2;"><br>
+
+        <button type="submit"
+                style="padding:12px 28px; background:white; color:black; font-size:18px; border-radius:8px; font-weight:bold; cursor:pointer;">
+            Convert to JD
+        </button>
+    </form>
+
+    {% if jd is not none %}
+        <div class="highlight-box" style="margin-top:30px; font-size:20px; border-left:5px solid #4caf50;">
+            <strong style="color:#4caf50;">Success!</strong>  
+            Your Julian Date has been calculated.
+            <br><br>
+            <strong>Your Julian Date:</strong> {{ jd }}
+            <br>
+            <span style="opacity:0.8;">Scroll down to Step 4 to copy it into WebObs.</span>
+        </div>
+    {% endif %}
+
+
+    <!-- BEGIN STEP 4 -->
+
+    <hr>
+
+    <h2>4. Fill Out the Submission Form</h2>
+    <p>Once you select <strong>Manual</strong>, you will see the full CCD submission form.  
+    Fill it out using the values produced by your photometry pipeline:</p>
+
+    <ul style="font-size:20px; line-height:1.7; opacity:0.9;">
+
+        <!-- Observation Type -->
+        <li><strong>Observation Type:</strong> CCD</li>
+
+        <!-- Target Name -->
+        <li><strong>Target Name:</strong>
+            {% if last_target_name %}
+                <span style="color:#7ab8ff;">{{ last_target_name }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ last_target_name }}')">Copy</button>
+            {% else %}
+                <span style="color:#888;">You have not run the program yet.</span>
+            {% endif %}
+        </li>
+
+        <p style="font-size:14px; opacity:0.7; margin-left:20px;">
+            Note: AAVSO only accepts target photometry for stars listed in VSX. 
+            If this star is not a known variable, WebObs will not accept it as a target.
+        </p>
+
+
+
+        <!-- JD -->
+        <li><strong>Observation Time (JD):</strong>
+            {% if jd %}
+                <span style="color:#7ab8ff;">{{ jd }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ jd }}')">Copy</button>
+            {% else %}
+                <span style="color:#888;">You have not calculated the Julian Date yet.</span>
+            {% endif %}
+        </li>
+
+
+        <div style="background:#330000; border-left:6px solid #ff4444; padding:15px; margin:25px 0; font-size:20px;">
+            <strong style="color:#ff7777;">IMPORTANT NOTE:</strong><br>
+            AAVSO only allows <strong>one filter per submission. (It will ask you to input ONE magnitude)</strong>.  
+            This means you must submit your <strong>Green (g)</strong> and <strong>Red (r)</strong> measurements 
+            as <em>separate</em> entries.
+            <br><br>
+            <strong style="color:#ff9999;">If you choose to submit the Green magnitude, then the filter you select in WebObs must be <u>Green (TG)</u>.</strong><br>
+            <strong style="color:#ff9999;">If you choose to submit the Red magnitude, then the filter you select must be <u>Red (TR)</u>.</strong>
+            <br><br>
+            Submitting the wrong filter will cause your observation to be rejected or scientifically unusable.
+        </div>
+
+         <!-- For green -->
+        <li><strong>Magnitude (For Green g):</strong>
+            {% if g_mag %}
+                <span style="color:#7ab8ff;">{{ g_mag }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ g_mag }}')">Copy</button>
+            {% else %}
+                <span style="color:#888;">You have not run the program yet.</span>
+            {% endif %}
+        </li>
+
+        <li><strong>Error g:</strong>
+            {% if err_g %}
+                <span style="color:#7ab8ff;">{{ err_g }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ err_g }}')">Copy</button>
+            {% else %}
+                <span style="color:#888;">You have not run the program yet.</span>
+            {% endif %}
+        </li>
+        
+        <!-- For red -->
+        <li><strong>Magnitude (For Red r):</strong>
+            {% if r_mag %}
+                <span style="color:#7ab8ff;">{{ r_mag }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ r_mag }}')">Copy</button>
+            {% else %}
+                <span style="color:#888;">You have not run the program yet.</span>
+            {% endif %}
+        </li>
+
+        <li><strong>Error r:</strong>
+            {% if err_r %}
+                <span style="color:#7ab8ff;">{{ err_r }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ err_r }}')">Copy</button>
+            {% else %}
+                <span style="color:#888;">You have not run the program yet.</span>
+            {% endif %}
+        </li>
+
+
+
+        <li><strong>Chart ID:</strong>
+            This is the identifier you found in step 2. It was printed in the upper‑right corner of your AAVSO finder chart  
+            (example: <em>X25678E</em>).  
+            It tells AAVSO exactly which chart you used.
+        </li>
+
+        <li><strong>Comparison Star Label:</strong>
+            On your AAVSO chart, comparison stars are marked with numbers like  
+            <em>123</em>, <em>98</em>, <em>104</em>, etc.  
+            These numbers represent their magnitudes (e.g., “123” means 12.3).  
+            Choose the comparison star you used for your photometry and enter its label here.
+        </li>
+
+        <li><strong>Check Star Label:</strong>
+            This is another labeled star on the same chart, used to verify your measurement.  
+            It is chosen the same way as the comparison star — look for a number label such as  
+            <em>110</em> or <em>128</em> and enter it here.
+        </li>
+
+
+        <!-- Check Star -->
+        <li><strong>Check Star Label:</strong> from chart</li>
+
+        <!-- RA/DEC -->
+        <li><strong>RA/DEC of Target:</strong>
+            {% if ra and dec %}
+                <span style="color:#7ab8ff;">RA: {{ ra }}°, DEC: {{ dec }}°</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ ra }} {{ dec }}')">Copy</button>
+            {% else %}
+                <span style="color:#888;">You have not run the program yet.</span>
+            {% endif %}
+        </li>
+
+        <!-- Filters -->
+        <li><strong>Filters:</strong> TG, TR, V, etc.</li>
+
+        <!-- Comments -->
+        <li><strong>Comments:</strong> optional but recommended</li>
+
+
+
+        <div class="plot-card">
+            <h3>This is what your inputs should look like! </h3>
+            <img src="{{ url_for('static', filename='AAVSO_4.jpg') }}">
+        </div>
+
+
+    </ul>
+
+    <p style="font-size:20px; line-height:1.7; opacity:0.9;">
+        Press <strong>Continue</strong> when finished.
+    </p>
+
+    <p style="font-size:20px; line-height:1.7; opacity:0.9;">
+        <strong>After you press Continue:</strong>  
+        WebObs will show a full preview of your submission.  
+        Review every field carefully — JD, magnitude, error, filter, comp/check stars, and comments.  
+        If something needs correction, you can go back and edit it.  
+        If everything looks correct, press <strong>Submit Observation</strong>.  
+        Your measurement is immediately added to the AAVSO International Database.
+    </p>
+
+    <hr>
+
+    <h2>5. Submit the Observation</h2>
+    <p>Click <strong>Submit Observation</strong>. Your data is now part of the AAVSO International Database.</p>
+
+        <div class="plot-card">
+            <h3>Press that SUBMIT! </h3>
+            <img src="{{ url_for('static', filename='AAVSO_5.jpg') }}">
+        </div>
+    <hr>
+
+    <h2>6. Best Practices</h2>
+    <ul>
+        <li>Use transformed magnitudes (your pipeline already does this)</li>
+        <li>Use the same comparison star across nights</li>
+        <li>Submit one entry per filter</li>
+    </ul>
+
+    <div style="text-align:center;">
+        <a href="/" class="home-button">Back to Home</a>
+    </div>
+
+    <p class="footer-note">Thank you for contributing to the AAVSO and supporting global variable star research.</p>
+
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            background-color: #000;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #f2f2f2;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 56px;
+            margin-bottom: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        h2 {
+            font-size: 30px;
+            margin-top: 50px;
+            margin-bottom: 15px;
+            font-weight: 400;
+        }
+
+        p {
+            font-size: 20px;
+            line-height: 1.7;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+
+        .tagline {
+            font-size: 26px;
+            margin-top: -5px;
+            margin-bottom: 40px;
+            opacity: 0.85;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #333;
+            margin: 50px auto;
+            width: 80%;
+        }
+
+        .button {
+            display: inline-block;
+            margin: 20px 15px;
+            padding: 16px 32px;
+            background-color: white;
+            color: black;
+            font-size: 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #dcdcdc;
+        }
+
+        .feature-box {
+            margin-top: 40px;
+            padding: 30px;
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.05);
+            text-align: left;
+        }
+
+        .feature-box h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .feature-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            line-height: 1.8;
+            font-size: 18px;
+        }
+
+        .feature-box li::before {
+            content: "• ";
+            color: #aaa;
+        }
+
+        /* Special button for AAVSO submission */
+        .submit-button {
+            display: inline-block;
+            margin: 20px 15px;
+            padding: 16px 32px;
+            background-color: #e6c14a; /* gold */
+            color: #000;
+            font-size: 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s ease;
+            box-shadow: 0 0 12px rgba(230,193,74,0.4);
+        }
+
+        .submit-button:hover {
+            background-color: #f0d46a;
+            box-shadow: 0 0 18px rgba(230,193,74,0.7);
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Stellar Photometry & Calibration Portal</h1>
+        <p class="tagline">Precision tools for modern astronomical analysis.</p>
+
+        <hr>
+
+        <p>
+            This platform provides a complete, automated workflow for stellar photometry 
+            and magnitude calibration. Whether you're analyzing a single target or an entire 
+            star cluster, the system handles every step — from WCS solving to catalog matching, 
+            flux extraction, color‑term calibration, and final standardized magnitudes.
+        </p>
+
+        <p>
+            Built for researchers, students, and observatories, this tool transforms raw FITS 
+            images into scientifically calibrated results with clarity, transparency, and 
+            professional‑grade accuracy.
+        </p>
+
+        <div class="feature-box">
+            <h3>What You Can Do Here</h3>
+            <ul>
+                <li>Upload Sloan or Johnson‑band FITS images</li>
+                <li>Automatically solve WCS using Astrometry.net</li>
+                <li>Query APASS DR10 for calibration stars</li>
+                <li>Perform instrumental photometry with robust background subtraction</li>
+                <li>Compute color terms, zero‑points, and calibrated magnitudes</li>
+                <li>Analyze individual objects or full star clusters</li>
+                <li>Generate diagnostic plots for transparency and verification</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="feature-box">
+            <h3>AAVSO Submission Support</h3>
+            <ul>
+                <li>Automatically formats your calibrated magnitudes for AAVSO standards</li>
+                <li>Converts RA/Dec into sexagesimal format for WebObs</li>
+                <li>Generates Julian Dates from your observation timestamps</li>
+                <li>Provides step‑by‑step instructions for WebObs manual submission</li>
+                <li>Ensures your filter selection (TG/TR) matches your calibrated data</li>
+                <li>Helps you avoid common submission errors that lead to rejected observations</li>
+            </ul>
+        </div>
+
+
+        <h2>Begin Your Analysis</h2>
+        <p>Select a workflow to get started.</p>
+
+        <a href="/object_calibration" class="button">Object Calibration</a>
+        <a href="/star_cluster_calibration" class="button">Star Cluster Calibration</a>
+        <a href="/aavso_instructions" class="submit-button">Submit Data to AAVSO</a>
+
+
+    </div>
+
+</body>
+</html>
