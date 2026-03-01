@@ -8,14 +8,11 @@ import os
 
 import time
 import random
-import math
 
 from astropy.io import fits 
 from astropy.stats import sigma_clipped_stats
 from astropy.io import fits
 from astropy.wcs import WCS
-from astropy.coordinates import SkyCoord
-from astropy.table import Table
 from astropy.io import ascii
 import astropy.units as u
 from astropy.time import Time
@@ -27,22 +24,17 @@ from astropy.visualization import ImageNormalize, ZScaleInterval, AsinhStretch
 
 from photutils.aperture import CircularAperture, CircularAnnulus, aperture_photometry
 from photutils.centroids import centroid_com
-from astropy.stats import SigmaClip
-from photutils.background import Background2D, MedianBackground
-
 
 from matplotlib.patches import Circle
 import matplotlib.pyplot as plt 
-import matplotlib.lines as mlines
 import numpy as np
 import pyvo
 import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 
-
-
 from photutils.detection import DAOStarFinder
+
 
 global status_message
 global last_jd
@@ -689,8 +681,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     data = ascii.read(csv_file, format='csv')
     hdul_g = fits.open(green_image)
     hdul_r = fits.open(red_image)
-    # wcs_g_h = WCS(hdul_g[0].header)
-    # wcs_r_h = WCS(hdul_r[0].header)
 
     with fits.open(green_image) as hdul:
         image_data_g = hdul[0].data
@@ -698,9 +688,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     with fits.open(red_image) as hdul:
         image_data_r = hdul[0].data
 
-
-    # w_g = WCS("wcs_green_solution.fits") 
-    # w_r = WCS("wcs_red_solution.fits")
     w_g = WCS(hdul_g[0].header)
     w_r = WCS(hdul_r[0].header)
 
@@ -728,7 +715,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
 
     calibration_num = random.sample(range(col_length), n)
     calibration_num = sorted(calibration_num)
-    print (f"Calibration numbers: {calibration_num}")
 
     ra_list = np.array([])
     dec_list = np.array([])
@@ -824,7 +810,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     y_pixel_r = y_pixel_r[inside]
     g = g[inside]
     r = r[inside]
-    # ("APASS stars inside image:", len(x_pixel_g))
 
 
     # ============================
@@ -905,7 +890,7 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
 
 
     # ============================================
-    # LIMIT TO n CALIBRATION STARS *AFTER MATCHING*
+    # LIMIT TO n CALIBRATION STARS *AFTER MATCHING* ONLY IF USER WISHES TO REDUCE NUMBER OF CALIBRATION STARS
     # ============================================
 
     total = len(inst_g)
@@ -940,10 +925,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     target_g_inst_mag = -2.5 * np.log10(target_flux_g)
     target_r_inst_mag = -2.5 * np.log10(target_flux_r)
 
-    #print("std(inst_g_r) =", np.std(inst_g_r))
-    #print("std(st_g_r)   =", np.std(st_g_r))
-
-
     m1_b1 = lsrl(inst_g_r, st_g_r)
     m2_b2 = lsrl(st_g_r, g_offset)
 
@@ -951,6 +932,10 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     new_std_inst = m2_b2[0]*new_std + m2_b2[1] 
 
     update_progress(1, "Generating diagnostic plots...")
+
+    #================================
+    # Plotting out calibration stars and linear regression
+    #================================
 
 
     plt.figure(figsize=(7,5))
@@ -995,11 +980,14 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
             "for reliable photometric calibration."
         )
         return (
-            None,  # standard g
-            None,  # standard r
-            None,  # error g
-            None,  # error r
-            None, None, None, None,  # Tgr, Cgr, Tg, Cg
+            "N/A",  # standard g
+            "N/A",  # standard r
+            "N/A",  # error g
+            "N/A",  # error r
+            round(Tgr, 4),
+            round(Cgr, 4),
+            round(Tg, 4),
+            round(Cg, 4),  
             color_term_path,
             green_offset_path,
             red_wcs_path,
@@ -1007,9 +995,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
             last_target_name,
             last_target_cutout
         )
-
-
-    # error_g, error_r = m1_b1[2], m2_b2[2]
 
     sigma1 = m1_b1[2]
     sigma2 = m2_b2[2]
@@ -1023,28 +1008,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     Tg  = m2_b2[0]
     Cg  = m2_b2[1]
 
-    
-    # print("\n===== DEBUG OUTPUT =====")
-    # print("Matched RA:", ra_match)
-    # print("Matched DEC:", dec_match)
-    # print("Green pixel coords (x, y):")
-    # print(x_green, y_green)
-    # print("Red pixel coords (x, y):")
-    # print(x_red, y_red)
-    # print("APASS g:", g)
-    # print("APASS r:", r)
-    # print("Green flux:", valid_flux_g)
-    # print("Red flux:", valid_flux_r)
-    # print("Instrumental g:", inst_g)
-    # print("Instrumental r:", inst_r)
-    # print("Instrumental (g-r):", inst_g_r)
-    # print("Standard (g-r):", st_g_r)
-    # print("Green offset:", g_offset)
-    # print("Tgr, Cgr:", Tgr, Cgr)
-    # print("Tg, Cg:", Tg, Cg)
-    # print("Standard error (color term):", m1_b1[2])
-    # print("Standard error (green offset):", m2_b2[2])
-    # print("========================\n")
 
     status_message = "Done!"
     update_progress(100, "Photometry complete!")
@@ -1372,8 +1335,6 @@ def show_cluster_and_calibration_image(
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close()
     return output_path
-
-
 
 def star_cluster_magnitudes(
     apass_csv,
@@ -1720,8 +1681,8 @@ def object_calibration():
     # If user typed paths instead, use those
     elif g_text and r_text:
         
-        full_calibration_with_subid(g_text, "wcs_green_solution.fits", os.environ.get("GREEN_SUBID_NGC"))  # GREEN_SUBID_JUL15  GREEN_SUBID_JUL16 GREEN_SUBID_NGC
-        num_rows = full_calibration_with_subid(r_text, "wcs_red_solution.fits", os.environ.get("RED_SUBID_NGC")) # RED_SUBID_JUL15 RED_SUBID_JUL16 RED_SUBID_NGC
+        full_calibration_with_subid(g_text, "wcs_green_solution.fits", os.environ.get("GREEN_SUBID"))  # GREEN_SUBID_JUL15  GREEN_SUBID_JUL16 GREEN_SUBID_NGC
+        num_rows = full_calibration_with_subid(r_text, "wcs_red_solution.fits", os.environ.get("RED_SUBID")) # RED_SUBID_JUL15 RED_SUBID_JUL16 RED_SUBID_NGC
         
         
         
@@ -1808,8 +1769,6 @@ def object_calibration():
         r_path_name=r_file,
         g_text_name=g_text,
         r_text_name=r_text,
-
-
 
     )
 
@@ -2119,11 +2078,6 @@ def convert_radec():
         last_dec_dms = None
 
     return redirect("/aavso_instructions")
-
-
-
-
-
 
 
 
