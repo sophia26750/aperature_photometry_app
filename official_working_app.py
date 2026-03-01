@@ -763,6 +763,22 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
 
     update_progress(1, "Detecting stars in green and red images...")
 
+    # === GREEN WCS CHECK ===
+    vmin_g, vmax_g = np.percentile(image_data_g, [5, 99])
+
+    fig = plt.figure(figsize=(10,8))
+    ax = plt.subplot(projection=w_g)
+    norm = ImageNormalize(image_data_g, interval=ZScaleInterval(), stretch=AsinhStretch())
+    ax.imshow(image_data_g, cmap="gray", origin="lower", norm=norm)
+
+    ax.scatter(x_pixel_g, y_pixel_g, s=30, edgecolor='red', facecolor='none', linewidth=0.8)
+    target_g_x, target_g_y = w_g.all_world2pix(RA, DEC, 1)
+    ax.add_patch(plt.Circle((target_g_x, target_g_y), 25, edgecolor='black', facecolor='none', linewidth=0.8))
+    ax.text(target_g_x + 10, target_g_y + 10, "Target", color='black')
+
+    plt.title("GREEN WCS Check: APASS stars + Target")
+    plt.savefig("static/green_wcs_check.png", dpi=150, bbox_inches="tight")
+    plt.close()
 
    # === RED WCS CHECK ===
     vmin_r, vmax_r = np.percentile(image_data_r, [5, 99])
@@ -782,22 +798,7 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     plt.close()
 
 
-    # === GREEN WCS CHECK ===
-    vmin_g, vmax_g = np.percentile(image_data_g, [5, 99])
-
-    fig = plt.figure(figsize=(10,8))
-    ax = plt.subplot(projection=w_g)
-    norm = ImageNormalize(image_data_g, interval=ZScaleInterval(), stretch=AsinhStretch())
-    ax.imshow(image_data_g, cmap="gray", origin="lower", norm=norm)
-
-    ax.scatter(x_pixel_g, y_pixel_g, s=30, edgecolor='red', facecolor='none', linewidth=0.8)
-    target_g_x, target_g_y = w_g.all_world2pix(RA, DEC, 1)
-    ax.add_patch(plt.Circle((target_g_x, target_g_y), 25, edgecolor='black', facecolor='none', linewidth=0.8))
-    ax.text(target_g_x + 10, target_g_y + 10, "Target", color='black')
-
-    plt.title("GREEN WCS Check: APASS stars + Target")
-    plt.savefig("static/green_wcs_check.png", dpi=150, bbox_inches="tight")
-    plt.close()
+    
 
     red_wcs_path = "static/red_wcs_check.png"
     green_wcs_path = "static/green_wcs_check.png"
@@ -823,7 +824,7 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     y_pixel_r = y_pixel_r[inside]
     g = g[inside]
     r = r[inside]
-    print("APASS stars inside image:", len(x_pixel_g))
+    # ("APASS stars inside image:", len(x_pixel_g))
 
 
     # ============================
@@ -939,8 +940,8 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     target_g_inst_mag = -2.5 * np.log10(target_flux_g)
     target_r_inst_mag = -2.5 * np.log10(target_flux_r)
 
-    print("std(inst_g_r) =", np.std(inst_g_r))
-    print("std(st_g_r)   =", np.std(st_g_r))
+    #print("std(inst_g_r) =", np.std(inst_g_r))
+    #print("std(st_g_r)   =", np.std(st_g_r))
 
 
     m1_b1 = lsrl(inst_g_r, st_g_r)
@@ -1718,8 +1719,10 @@ def object_calibration():
 
     # If user typed paths instead, use those
     elif g_text and r_text:
-        num_rows = full_calibration_with_subid(r_text, "wcs_red_solution.fits", os.environ.get("GREEN_SUBID_NGC")) # RED_SUBID_JUL15 RED_SUBID_JUL16
-        full_calibration_with_subid(g_text, "wcs_green_solution.fits", os.environ.get("RED_SUBID_NGC"))  # GREEN_SUBID_JUL15  GREEN_SUBID_JUL16
+        
+        full_calibration_with_subid(g_text, "wcs_green_solution.fits", os.environ.get("GREEN_SUBID_NGC"))  # GREEN_SUBID_JUL15  GREEN_SUBID_JUL16 GREEN_SUBID_NGC
+        num_rows = full_calibration_with_subid(r_text, "wcs_red_solution.fits", os.environ.get("RED_SUBID_NGC")) # RED_SUBID_JUL15 RED_SUBID_JUL16 RED_SUBID_NGC
+        
         
         
         #full_calibration(g_text, "wcs_green_solution.fits")
@@ -1783,7 +1786,7 @@ def object_calibration():
     last_dec = dec_deg
 
     return render_template(
-        "object_calibration.html",
+        "object_calibration.html", 
         standard_g_target=standard_g_target,
         standard_r_target=standard_r_target,
         error_g=error_g,

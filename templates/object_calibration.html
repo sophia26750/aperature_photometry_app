@@ -366,20 +366,20 @@
         <div class="results-box">
             <h3>Photometric Analysis Results</h3> <br>
 
-            {% if g_path_name or g_text or r_path_name or r_text %}
+            {% if g_path_name or g_text_name or r_path_name or r_text_name %}
             <p style="font-size: 12px; opacity: 0.55; margin-top: 10px; font-style: italic;">
                 <strong>Submitted Images:</strong><br>
 
                 {% if g_path_name %}
                     Green: {{ g_path_name }}<br>
-                {% elif g_text %}
-                    Green: {{ g_text }}<br>
+                {% elif g_text_name %}
+                    Green: {{ g_text_name }}<br>
                 {% endif %}
 
                 {% if r_path_name %}
                     Red: {{ r_path_name }}<br>
-                {% elif r_text %}
-                    Red: {{ r_text }}<br>
+                {% elif r_text_name %}
+                    Red: {{ r_text_name }}<br>
                 {% endif %}
             </p>
             {% endif %}
