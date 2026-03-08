@@ -789,6 +789,9 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
 
     fig = plt.figure(figsize=(10,8))
     ax = plt.subplot(projection=w_g)
+
+    ax.coords[0].set_axislabel("Right Ascension (RA)")
+
     ax.coords[1].set_axislabel_position('l') 
     ax.coords[1].set_ticklabel_position('l')
     ax.imshow(image_data_g, cmap="gray", origin="lower", norm=norm_g)
@@ -839,6 +842,7 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
 
     fig = plt.figure(figsize=(10,8))
     ax = plt.subplot(projection=w_r)
+    ax.coords[0].set_axislabel("Right Ascension (RA)")
     ax.coords[1].set_axislabel_position('l') 
     ax.coords[1].set_ticklabel_position('l')
     ax.imshow(image_data_r, cmap="gray", origin="lower", norm=norm_r)
