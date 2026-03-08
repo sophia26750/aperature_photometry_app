@@ -658,6 +658,24 @@ def show_target_cutout(
     return cx_g, cy_g, star_name, msg, output_combined
 
 
+def get_image_center(fits_file):
+    with fits.open(fits_file) as hdul:
+        data = hdul[0].data
+        w = WCS(hdul[0].header)
+
+    ny, nx = data.shape
+    cx_pix = nx / 2
+    cy_pix = ny / 2
+
+    ra_center, dec_center = w.all_pix2world(cx_pix, cy_pix, 1)
+
+    # ⭐ Convert NumPy arrays → Python floats
+    ra_center = float(ra_center)
+    dec_center = float(dec_center)
+
+    return ra_center, dec_center
+
+
 
 def lsrl(x, y):
     x = np.array(x)
@@ -774,6 +792,11 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     ax.coords[1].set_axislabel_position('l') 
     ax.coords[1].set_ticklabel_position('l')
     ax.imshow(image_data_g, cmap="gray", origin="lower", norm=norm_g)
+
+    # Compute image center for display 
+    ra_center, dec_center = get_image_center("wcs_green_solution.fits")
+
+
 
   # Calibration Stars marked
     for xg, yg in zip(x_pixel_g, y_pixel_g):
@@ -1085,9 +1108,10 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
         red_wcs_path,
         green_wcs_path,
         last_target_name, 
-        last_target_cutout
+        last_target_cutout, 
+        ra_center,
+        dec_center
 
- 
     )
 
 
@@ -1600,6 +1624,9 @@ def object_calibration():
 
     ra_deg = None
     dec_deg = None
+    ra_center = None
+    dec_center = None
+
 
     upload_folder = "uploads" 
     os.makedirs(upload_folder, exist_ok=True)
@@ -1728,7 +1755,7 @@ def object_calibration():
                     )
 
 
-        standard_g_target, standard_r_target, error_g, error_r, Tgr, Cgr, Tg, Cg, color_term_path, green_offset_path, red_wcs_path, green_wcs_path, last_target_name, last_target_cutout = magnitudes(
+        standard_g_target, standard_r_target, error_g, error_r, Tgr, Cgr, Tg, Cg, color_term_path, green_offset_path, red_wcs_path, green_wcs_path, last_target_name, last_target_cutout, ra_center, dec_center  = magnitudes(
             "apass_subset.csv",
             "wcs_green_solution.fits",
             "wcs_red_solution.fits",
@@ -1787,7 +1814,7 @@ def object_calibration():
             num_rows = num_rows
 
 
-        standard_g_target, standard_r_target, error_g, error_r, Tgr, Cgr, Tg, Cg, color_term_path, green_offset_path, red_wcs_path, green_wcs_path, last_target_name, last_target_cutout = magnitudes(
+        standard_g_target, standard_r_target, error_g, error_r, Tgr, Cgr, Tg, Cg, color_term_path, green_offset_path, red_wcs_path, green_wcs_path, last_target_name, last_target_cutout, ra_center, dec_center = magnitudes(
             "apass_subset.csv",
             "wcs_green_solution.fits",
             "wcs_red_solution.fits",
@@ -1828,6 +1855,8 @@ def object_calibration():
         r_path_name=r_file,
         g_text_name=g_text,
         r_text_name=r_text,
+        ra_center=ra_center,
+        dec_center=dec_center
 
     )
 

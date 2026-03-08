@@ -458,6 +458,18 @@
 
         </div>
 
+        {% if ra_center and dec_center %}
+        <div class="results-box">
+            <h3>Image Center</h3>
+
+            <p style="font-size: 20px; color: #9cf;">
+                RA Center: {{ ra_center|round(6) }}°<br>
+                Dec Center: {{ dec_center|round(6) }}°
+            </p>
+        </div>
+        {% endif %}
+
+
 
         {% if last_target_name %}
         <div class="results-box">
