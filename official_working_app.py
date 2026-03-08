@@ -64,7 +64,9 @@ def update_progress(value, message):
         progress_value += value
         progress_message = message
 
-
+#=========================================
+# Working with Astronometry and APASS APIs 
+#=========================================
 
 def login_to_astrometry(api_key: str) -> str:
 	url = 'http://nova.astrometry.net/api/login'
@@ -147,8 +149,6 @@ def wait_for_job(sub_id, timeout=180):
 
     raise TimeoutError("Job did not appear in time.")
 
-         
-
 
 def wait_for_calibration(job_id, timeout=180):
     url = f"http://nova.astrometry.net/api/jobs/{job_id}/calibration/"
@@ -165,7 +165,6 @@ def wait_for_calibration(job_id, timeout=180):
         time.sleep(2)
 
     return None
-
 
 
 def apply_calibration_to_fits(input_fits, output_fits, job_id):
@@ -258,7 +257,6 @@ def query_apass_to_csv(ra_center, dec_center, radius_deg, output_csv="apass_subs
     return num_rows - 2
 
 
-
 def full_calibration_with_subid(image, wcs_image_name, subid_key):
     global status_message
 
@@ -329,7 +327,9 @@ def full_calibration_with_subid(image, wcs_image_name, subid_key):
     
     return num_rows
 
-
+#=========================================
+# Gathering specific information from APIs 
+#=========================================
 
 def full_calibration(image, wcs_image_name):
     global status_message
