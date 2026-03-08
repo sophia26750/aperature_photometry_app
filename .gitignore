@@ -225,3 +225,4 @@ cluster_calibrated_magnitudes.csv
 cluster_stars.csv
 test.py
 static/
+uploads/uploaded_image.fits

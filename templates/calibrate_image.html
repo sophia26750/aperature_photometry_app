@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Calibration</title>
+
+    <style>
+        body {
+            background-color: #000;
+            color: #eee;
+            font-family: Arial, Helvetica, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            opacity: 0.85;
+        }
+        a:hover { opacity: 1; }
+
+        h1, h2, h3 {
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #333;
+            width: 80%;
+            margin: 30px auto;
+        }
+
+        form {
+            width: 70%;
+            margin: 0 auto;
+            padding: 25px;
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.05);
+        }
+
+        input[type="file"] {
+            margin: 10px 0 20px 0;
+            font-size: 16px;
+            color: #ccc;
+        }
+
+        button[type="submit"] {
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: none;
+            background-color: #444;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s ease;
+            margin-top: 10px;
+        }
+        button[type="submit"]:hover { background-color: #666; }
+
+        .results-box {
+            width: 70%;
+            margin: 40px auto;
+            padding: 25px;
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.05);
+            text-align: center;
+        }
+
+        .plot-card {
+            width: 70%;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.08);
+        }
+
+        .plot-card img {
+            width: 90%;
+            border-radius: 6px;
+            border: 1px solid #555;
+            box-shadow: 0 0 12px rgba(255,255,255,0.15);
+        }
+
+        table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            color: #ddd;
+            font-size: 15px;
+        }
+
+        table td, table th {
+            border: 1px solid #333;
+            padding: 8px 12px;
+        }
+
+        table tr:nth-child(even) {
+            background-color: #1a1a1a;
+        }
+
+        table tr:nth-child(odd) {
+            background-color: #111;
+        }
+
+        table th {
+            background-color: #222;
+            color: #9cf;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="/">← Back to Home</a>
+    <br><br>
+
+    <h1>Astrometric Image Calibration</h1>
+    <p>Upload a FITS image to solve for WCS and view the results.</p>
+
+    <hr>
+
+    <!-- Progress Bar -->
+    <div style="width:70%; margin:20px auto;">
+        <div id="progress-container"
+            style="width:100%; height:28px; background:#222; border:1px solid #444;
+                    border-radius:10px; position:relative; overflow:hidden;">
+
+            <div id="progress-bar"
+                style="height:100%; width:0%; background:#0f0; transition:width 0.3s;">
+            </div>
+
+            <div id="progress-text"
+                style="position:absolute; top:0; left:0; width:100%; height:100%;
+                        display:flex; align-items:center; justify-content:center;
+                        font-family:monospace; font-size:14px; color:#eee;">
+                Waiting...
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function pollProgress() {
+        fetch("/progress_status")
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById("progress-bar").style.width = data.progress + "%";
+                document.getElementById("progress-text").textContent = data.message;
+            });
+    }
+    setInterval(pollProgress, 700);
+    </script>
+
+    <!-- Upload Form -->
+    <form method="POST" enctype="multipart/form-data">
+        <h2>Upload FITS Image</h2>
+
+        <input type="file" name="fits_file" accept=".fits" required><br>
+
+        <button type="submit">Calibrate Image</button>
+    </form>
+
+    <hr>
+
+    {% if original_name %}
+    <div class="results-box">
+        <h3>Uploaded File</h3>
+        <p style="font-size: 18px; color: #9cf;">
+            {{ original_name }}
+        </p>
+    </div>
+    {% endif %}
+
+    {% if ra_center %}
+    <div class="results-box">
+        <h3>Image Center Coordinates</h3>
+
+        <p style="font-size: 20px; color: #9cf;">
+            <strong>Decimal:</strong><br>
+            RA: {{ ra_center|round(6) }}°<br>
+            Dec: {{ dec_center|round(6) }}°
+        </p>
+
+        {% if ra_hms and dec_dms %}
+        <p style="font-size: 20px; color: #9cf; margin-top: 20px;">
+            <strong>Sexagesimal:</strong><br>
+            RA (HMS): {{ ra_hms }}<br>
+            Dec (DMS): {{ dec_dms }}
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+
+    {% if astro_meta %}
+    <div class="results-box">
+        <h3>Astrometry.net Metadata</h3>
+
+        <table>
+            <tr>
+                <th>Field</th>
+                <th>Value</th>
+            </tr>
+
+            {% for key, value in astro_meta.items() %}
+            <tr>
+                <td>{{ key }}</td>
+                <td>{{ value }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+
+    {% if wcs_png %}
+    <div class="plot-card">
+        <h3>WCS-Calibrated Image</h3>
+        <img src="{{ url_for('static', filename=wcs_png.split('/')[-1]) }}">
+    </div>
+    {% endif %}
+
+
+
+</body>
+</html>

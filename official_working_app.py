@@ -1119,6 +1119,98 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     )
 
 
+#======================================
+# If user just wants to calibrate the images, use this function
+#======================================
+def calibrate_image_only(fits_file):
+
+    global status_message
+
+    base = "calibrated"  # fixed base name
+
+    wcs_fits_path = f"static/{base}_wcs.fits"
+    png_path      = f"static/{base}_preview.png"
+
+
+    
+
+    # -----------------------------
+    # 1. Login
+    # -----------------------------
+    update_progress(5, "Logging into Astrometry.net...")
+    api_key = os.environ.get("ASTRO_LOGIN")
+    session_key = login_to_astrometry(api_key)
+
+    if session_key is None:
+        status_message = "Error: Astrometry.net login failed."
+        raise RuntimeError("Astrometry.net login failed.")
+
+    status_message = "Session key acquired. Uploading FITS file..."
+    update_progress(5, "Session key acquired.")
+
+    # -----------------------------
+    # 2. Upload + Solve
+    # -----------------------------
+    subid = upload_fits_file(fits_file, session_key)
+    update_progress(10, "FITS uploaded. Waiting for job ID...")
+
+    job_id = wait_for_job(subid)
+    update_progress(10, "Job ID received. Waiting for calibration...")
+
+    # -----------------------------
+    # 3. Retrieve FULL calibration metadata
+    # -----------------------------
+    astro_metadata = wait_for_calibration(job_id)
+    update_progress(10, "Calibration received. Applying WCS...")
+
+    # Print everything to console for debugging
+    print("\n===== ASTROMETRY.NET METADATA =====")
+    for key, value in astro_metadata.items():
+        print(f"{key}: {value}")
+    print("===================================\n")
+
+    # -----------------------------
+    # 4. Apply WCS to FITS
+    # -----------------------------
+    wcs_obj = apply_calibration_to_fits(fits_file, wcs_fits_path, job_id)
+    status_message = "WCS applied successfully."
+    update_progress(10, "WCS applied.")
+
+    # -----------------------------
+    # 5. Compute image center
+    # -----------------------------
+    ra_center, dec_center = get_image_center(wcs_fits_path)
+    status_message = f"Image center computed: RA={ra_center:.5f}, Dec={dec_center:.5f}"
+    update_progress(10, "Computed image center.")
+
+    # -----------------------------
+    # 6. Create PNG preview
+    # -----------------------------
+    png_path = "static/wcs_preview.png"
+    status_message = "Generating PNG preview..."
+    update_progress(10, "Generating PNG preview...")
+
+    data = fits.getdata(wcs_fits_path)
+
+    # Contrast scaling
+    pmin, pmax = np.percentile(data, [20, 80])
+    z = ZScaleInterval()
+    zmin, zmax = z.get_limits(data)
+    vmin = max(zmin, pmin)
+    vmax = min(zmax, pmax)
+    norm = ImageNormalize(data, vmin=vmin, vmax=vmax, stretch=AsinhStretch())
+
+    plt.figure(figsize=(10, 8))
+    plt.imshow(data, cmap="gray", origin="lower", norm=norm)
+    plt.title("WCS-Calibrated Image")
+    plt.savefig(png_path, dpi=150, bbox_inches="tight")
+    plt.close()
+
+    status_message = "Calibration complete!"
+    update_progress(100, "Calibration complete!")
+
+    return wcs_fits_path, png_path, ra_center, dec_center, astro_metadata
+
 
 
 
@@ -1694,9 +1786,11 @@ def object_calibration():
 
         # If neither option was provided
         if ra_deg is None or dec_deg is None:
+
             return render_template(
                 "object_calibration.html",
                 error_message="Please enter RA/Dec in either decimal or HMS/DMS format."
+
 
             )
         
@@ -2087,6 +2181,49 @@ def star_cluster_calibration():
     return render_template("star_cluster_calibration.html")
 
 
+
+
+@app.route("/calibrate_image", methods=["GET", "POST"])
+def calibrate_image_page():
+    if request.method == "POST":
+        global progress_value, progress_message
+        progress_value = 0 
+        progress_message = "Starting..."
+
+        
+        file = request.files.get("fits_file")
+        if not file:
+            return render_template("calibrate_image.html", error="No file uploaded.")
+
+        # ⭐ Preserve original filename for display
+        original_name = file.filename
+
+        # ⭐ Always overwrite the same uploaded file
+        upload_path = "uploads/uploaded_image.fits"
+        file.save(upload_path)
+
+        # ⭐ Run calibration (always overwrites the same output files)
+        wcs_fits, png_path, ra_center, dec_center, astro_meta = calibrate_image_only(upload_path)
+
+        # ⭐ Convert center coordinates to sexagesimal
+        coord = SkyCoord(ra_center * u.deg, dec_center * u.deg)
+        ra_hms = coord.ra.to_string(unit=u.hour, sep=":", precision=2)
+        dec_dms = coord.dec.to_string(unit=u.deg, sep=":", precision=2, alwayssign=True)
+
+        return render_template(
+            "calibrate_image.html",
+            original_name=original_name,      # ⭐ original uploaded filename
+            uploaded_path=upload_path,        # ⭐ fixed internal filename
+            wcs_fits=wcs_fits,                # ⭐ fixed output filename
+            wcs_png=png_path,                 # ⭐ fixed output PNG
+            ra_center=ra_center,
+            dec_center=dec_center,
+            ra_hms=ra_hms,
+            dec_dms=dec_dms,
+            astro_meta=astro_meta
+        )
+
+    return render_template("calibrate_image.html")
 
 
 @app.route("/status")
