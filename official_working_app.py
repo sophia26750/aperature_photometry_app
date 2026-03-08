@@ -8,14 +8,11 @@ import os
 
 import time
 import random
-import math
 
 from astropy.io import fits 
 from astropy.stats import sigma_clipped_stats
 from astropy.io import fits
 from astropy.wcs import WCS
-from astropy.coordinates import SkyCoord
-from astropy.table import Table
 from astropy.io import ascii
 import astropy.units as u
 from astropy.time import Time
@@ -27,22 +24,17 @@ from astropy.visualization import ImageNormalize, ZScaleInterval, AsinhStretch
 
 from photutils.aperture import CircularAperture, CircularAnnulus, aperture_photometry
 from photutils.centroids import centroid_com
-from astropy.stats import SigmaClip
-from photutils.background import Background2D, MedianBackground
-
 
 from matplotlib.patches import Circle
 import matplotlib.pyplot as plt 
-import matplotlib.lines as mlines
 import numpy as np
 import pyvo
 import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 
-
-
 from photutils.detection import DAOStarFinder
+
 
 global status_message
 global last_jd
@@ -666,6 +658,24 @@ def show_target_cutout(
     return cx_g, cy_g, star_name, msg, output_combined
 
 
+def get_image_center(fits_file):
+    with fits.open(fits_file) as hdul:
+        data = hdul[0].data
+        w = WCS(hdul[0].header)
+
+    ny, nx = data.shape
+    cx_pix = nx / 2
+    cy_pix = ny / 2
+
+    ra_center, dec_center = w.all_pix2world(cx_pix, cy_pix, 1)
+
+    # ⭐ Convert NumPy arrays → Python floats
+    ra_center = float(ra_center)
+    dec_center = float(dec_center)
+
+    return ra_center, dec_center
+
+
 
 def lsrl(x, y):
     x = np.array(x)
@@ -689,8 +699,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     data = ascii.read(csv_file, format='csv')
     hdul_g = fits.open(green_image)
     hdul_r = fits.open(red_image)
-    # wcs_g_h = WCS(hdul_g[0].header)
-    # wcs_r_h = WCS(hdul_r[0].header)
 
     with fits.open(green_image) as hdul:
         image_data_g = hdul[0].data
@@ -698,9 +706,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     with fits.open(red_image) as hdul:
         image_data_r = hdul[0].data
 
-
-    # w_g = WCS("wcs_green_solution.fits") 
-    # w_r = WCS("wcs_red_solution.fits")
     w_g = WCS(hdul_g[0].header)
     w_r = WCS(hdul_r[0].header)
 
@@ -728,7 +733,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
 
     calibration_num = random.sample(range(col_length), n)
     calibration_num = sorted(calibration_num)
-    print (f"Calibration numbers: {calibration_num}")
 
     ra_list = np.array([])
     dec_list = np.array([])
@@ -763,39 +767,107 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
 
     update_progress(1, "Detecting stars in green and red images...")
 
-    # === GREEN WCS CHECK ===
-    vmin_g, vmax_g = np.percentile(image_data_g, [5, 99])
+ # === GREEN WCS CHECK ===
+
+    # Unified higher-contrast percentile clamp
+    pmin, pmax = np.percentile(image_data_g, [20, 80])
+
+    # ZScale limits
+    z = ZScaleInterval()
+    zmin, zmax = z.get_limits(image_data_g)
+
+    # Blended limits (same for both images)
+    vmin = max(zmin, pmin)
+    vmax = min(zmax, pmax)
+
+    norm_g = ImageNormalize(
+        image_data_g,
+        vmin=vmin,
+        vmax=vmax,
+        stretch=AsinhStretch()
+    )
 
     fig = plt.figure(figsize=(10,8))
     ax = plt.subplot(projection=w_g)
-    norm = ImageNormalize(image_data_g, interval=ZScaleInterval(), stretch=AsinhStretch())
-    ax.imshow(image_data_g, cmap="gray", origin="lower", norm=norm)
 
-    ax.scatter(x_pixel_g, y_pixel_g, s=30, edgecolor='red', facecolor='none', linewidth=0.8)
+    ax.coords[0].set_axislabel("Right Ascension (RA)")
+
+    ax.coords[1].set_axislabel_position('l') 
+    ax.coords[1].set_ticklabel_position('l')
+    ax.imshow(image_data_g, cmap="gray", origin="lower", norm=norm_g)
+
+    # Compute image center for display 
+    ra_center, dec_center = get_image_center("wcs_green_solution.fits")
+
+
+
+  # Calibration Stars marked
+    for xg, yg in zip(x_pixel_g, y_pixel_g):
+        ax.add_patch(plt.Circle(
+            (xg, yg),
+            radius=20,                 # slightly bigger
+            edgecolor='#5A0000',       # darker red
+            facecolor='none',
+            linewidth=0.9,
+            alpha=0.6
+        ))
+
+    # Target star unchanged
     target_g_x, target_g_y = w_g.all_world2pix(RA, DEC, 1)
-    ax.add_patch(plt.Circle((target_g_x, target_g_y), 25, edgecolor='black', facecolor='none', linewidth=0.8))
+    ax.add_patch(plt.Circle((target_g_x, target_g_y), 25,
+                            edgecolor='black', facecolor='none', linewidth=0.8))
     ax.text(target_g_x + 10, target_g_y + 10, "Target", color='black')
 
     plt.title("GREEN WCS Check: APASS stars + Target")
     plt.savefig("static/green_wcs_check.png", dpi=150, bbox_inches="tight")
     plt.close()
 
-   # === RED WCS CHECK ===
-    vmin_r, vmax_r = np.percentile(image_data_r, [5, 99])
+
+
+    # === RED WCS CHECK ===
+
+    # Use the SAME contrast settings for red image
+    pmin, pmax = np.percentile(image_data_r, [20, 80])
+    z = ZScaleInterval()
+    zmin, zmax = z.get_limits(image_data_r)
+    vmin = max(zmin, pmin)
+    vmax = min(zmax, pmax)
+
+    norm_r = ImageNormalize(
+        image_data_r,
+        vmin=vmin,
+        vmax=vmax,
+        stretch=AsinhStretch()
+    )
 
     fig = plt.figure(figsize=(10,8))
     ax = plt.subplot(projection=w_r)
-    norm = ImageNormalize(image_data_r, interval=ZScaleInterval(), stretch=AsinhStretch())
-    ax.imshow(image_data_r, cmap="gray", origin="lower", norm=norm)
+    ax.coords[0].set_axislabel("Right Ascension (RA)")
+    ax.coords[1].set_axislabel_position('l') 
+    ax.coords[1].set_ticklabel_position('l')
+    ax.imshow(image_data_r, cmap="gray", origin="lower", norm=norm_r)
 
-    ax.scatter(x_pixel_r, y_pixel_r, s=30, edgecolor='cyan', facecolor='none', linewidth=0.8)
+    # Calibration stars: slightly bigger, opacity 0.6, darker blue-green
+    for xr, yr in zip(x_pixel_r, y_pixel_r):
+        ax.add_patch(plt.Circle(
+            (xr, yr),
+            radius=20,                 # slightly bigger
+            edgecolor='#004F4F',       # darker cyan/teal
+            facecolor='none',
+            linewidth=0.9,
+            alpha=0.6
+        ))
+
+    # Target star unchanged
     target_r_x, target_r_y = w_r.all_world2pix(RA, DEC, 1)
-    ax.add_patch(plt.Circle((target_r_x, target_r_y), 25, edgecolor='black', facecolor='none', linewidth=0.8))
+    ax.add_patch(plt.Circle((target_r_x, target_r_y), 25,
+                            edgecolor='black', facecolor='none', linewidth=0.8))
     ax.text(target_r_x + 10, target_r_y + 10, "Target", color='black')
 
     plt.title("RED WCS Check: APASS stars + Target")
     plt.savefig("static/red_wcs_check.png", dpi=150, bbox_inches="tight")
     plt.close()
+
 
 
     
@@ -824,7 +896,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     y_pixel_r = y_pixel_r[inside]
     g = g[inside]
     r = r[inside]
-    # ("APASS stars inside image:", len(x_pixel_g))
 
 
     # ============================
@@ -905,7 +976,7 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
 
 
     # ============================================
-    # LIMIT TO n CALIBRATION STARS *AFTER MATCHING*
+    # LIMIT TO n CALIBRATION STARS *AFTER MATCHING* ONLY IF USER WISHES TO REDUCE NUMBER OF CALIBRATION STARS
     # ============================================
 
     total = len(inst_g)
@@ -940,10 +1011,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     target_g_inst_mag = -2.5 * np.log10(target_flux_g)
     target_r_inst_mag = -2.5 * np.log10(target_flux_r)
 
-    #print("std(inst_g_r) =", np.std(inst_g_r))
-    #print("std(st_g_r)   =", np.std(st_g_r))
-
-
     m1_b1 = lsrl(inst_g_r, st_g_r)
     m2_b2 = lsrl(st_g_r, g_offset)
 
@@ -951,6 +1018,10 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     new_std_inst = m2_b2[0]*new_std + m2_b2[1] 
 
     update_progress(1, "Generating diagnostic plots...")
+
+    #================================
+    # Plotting out calibration stars and linear regression
+    #================================
 
 
     plt.figure(figsize=(7,5))
@@ -995,11 +1066,14 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
             "for reliable photometric calibration."
         )
         return (
-            None,  # standard g
-            None,  # standard r
-            None,  # error g
-            None,  # error r
-            None, None, None, None,  # Tgr, Cgr, Tg, Cg
+            "N/A",  # standard g
+            "N/A",  # standard r
+            "N/A",  # error g
+            "N/A",  # error r
+            None,
+            None,
+            None,
+            None,  
             color_term_path,
             green_offset_path,
             red_wcs_path,
@@ -1007,9 +1081,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
             last_target_name,
             last_target_cutout
         )
-
-
-    # error_g, error_r = m1_b1[2], m2_b2[2]
 
     sigma1 = m1_b1[2]
     sigma2 = m2_b2[2]
@@ -1023,28 +1094,6 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     Tg  = m2_b2[0]
     Cg  = m2_b2[1]
 
-    
-    # print("\n===== DEBUG OUTPUT =====")
-    # print("Matched RA:", ra_match)
-    # print("Matched DEC:", dec_match)
-    # print("Green pixel coords (x, y):")
-    # print(x_green, y_green)
-    # print("Red pixel coords (x, y):")
-    # print(x_red, y_red)
-    # print("APASS g:", g)
-    # print("APASS r:", r)
-    # print("Green flux:", valid_flux_g)
-    # print("Red flux:", valid_flux_r)
-    # print("Instrumental g:", inst_g)
-    # print("Instrumental r:", inst_r)
-    # print("Instrumental (g-r):", inst_g_r)
-    # print("Standard (g-r):", st_g_r)
-    # print("Green offset:", g_offset)
-    # print("Tgr, Cgr:", Tgr, Cgr)
-    # print("Tg, Cg:", Tg, Cg)
-    # print("Standard error (color term):", m1_b1[2])
-    # print("Standard error (green offset):", m2_b2[2])
-    # print("========================\n")
 
     status_message = "Done!"
     update_progress(100, "Photometry complete!")
@@ -1063,11 +1112,104 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
         red_wcs_path,
         green_wcs_path,
         last_target_name, 
-        last_target_cutout
+        last_target_cutout, 
+        ra_center,
+        dec_center
 
- 
     )
 
+
+#======================================
+# If user just wants to calibrate the images, use this function
+#======================================
+def calibrate_image_only(fits_file):
+
+    global status_message
+
+    base = "calibrated"  # fixed base name
+
+    wcs_fits_path = f"static/{base}_wcs.fits"
+    png_path      = f"static/{base}_preview.png"
+
+
+    
+
+    # -----------------------------
+    # 1. Login
+    # -----------------------------
+    update_progress(5, "Logging into Astrometry.net...")
+    api_key = os.environ.get("ASTRO_LOGIN")
+    session_key = login_to_astrometry(api_key)
+
+    if session_key is None:
+        status_message = "Error: Astrometry.net login failed."
+        raise RuntimeError("Astrometry.net login failed.")
+
+    status_message = "Session key acquired. Uploading FITS file..."
+    update_progress(5, "Session key acquired.")
+
+    # -----------------------------
+    # 2. Upload + Solve
+    # -----------------------------
+    subid = upload_fits_file(fits_file, session_key)
+    update_progress(10, "FITS uploaded. Waiting for job ID...")
+
+    job_id = wait_for_job(subid)
+    update_progress(10, "Job ID received. Waiting for calibration...")
+
+    # -----------------------------
+    # 3. Retrieve FULL calibration metadata
+    # -----------------------------
+    astro_metadata = wait_for_calibration(job_id)
+    update_progress(10, "Calibration received. Applying WCS...")
+
+    # Print everything to console for debugging
+    print("\n===== ASTROMETRY.NET METADATA =====")
+    for key, value in astro_metadata.items():
+        print(f"{key}: {value}")
+    print("===================================\n")
+
+    # -----------------------------
+    # 4. Apply WCS to FITS
+    # -----------------------------
+    wcs_obj = apply_calibration_to_fits(fits_file, wcs_fits_path, job_id)
+    status_message = "WCS applied successfully."
+    update_progress(10, "WCS applied.")
+
+    # -----------------------------
+    # 5. Compute image center
+    # -----------------------------
+    ra_center, dec_center = get_image_center(wcs_fits_path)
+    status_message = f"Image center computed: RA={ra_center:.5f}, Dec={dec_center:.5f}"
+    update_progress(10, "Computed image center.")
+
+    # -----------------------------
+    # 6. Create PNG preview
+    # -----------------------------
+    png_path = "static/wcs_preview.png"
+    status_message = "Generating PNG preview..."
+    update_progress(10, "Generating PNG preview...")
+
+    data = fits.getdata(wcs_fits_path)
+
+    # Contrast scaling
+    pmin, pmax = np.percentile(data, [20, 80])
+    z = ZScaleInterval()
+    zmin, zmax = z.get_limits(data)
+    vmin = max(zmin, pmin)
+    vmax = min(zmax, pmax)
+    norm = ImageNormalize(data, vmin=vmin, vmax=vmax, stretch=AsinhStretch())
+
+    plt.figure(figsize=(10, 8))
+    plt.imshow(data, cmap="gray", origin="lower", norm=norm)
+    plt.title("WCS-Calibrated Image")
+    plt.savefig(png_path, dpi=150, bbox_inches="tight")
+    plt.close()
+
+    status_message = "Calibration complete!"
+    update_progress(100, "Calibration complete!")
+
+    return wcs_fits_path, png_path, ra_center, dec_center, astro_metadata
 
 
 
@@ -1373,8 +1515,6 @@ def show_cluster_and_calibration_image(
     plt.close()
     return output_path
 
-
-
 def star_cluster_magnitudes(
     apass_csv,
     green_image,
@@ -1580,6 +1720,9 @@ def object_calibration():
 
     ra_deg = None
     dec_deg = None
+    ra_center = None
+    dec_center = None
+
 
     upload_folder = "uploads" 
     os.makedirs(upload_folder, exist_ok=True)
@@ -1643,9 +1786,11 @@ def object_calibration():
 
         # If neither option was provided
         if ra_deg is None or dec_deg is None:
+
             return render_template(
                 "object_calibration.html",
                 error_message="Please enter RA/Dec in either decimal or HMS/DMS format."
+
 
             )
         
@@ -1708,7 +1853,7 @@ def object_calibration():
                     )
 
 
-        standard_g_target, standard_r_target, error_g, error_r, Tgr, Cgr, Tg, Cg, color_term_path, green_offset_path, red_wcs_path, green_wcs_path, last_target_name, last_target_cutout = magnitudes(
+        standard_g_target, standard_r_target, error_g, error_r, Tgr, Cgr, Tg, Cg, color_term_path, green_offset_path, red_wcs_path, green_wcs_path, last_target_name, last_target_cutout, ra_center, dec_center  = magnitudes(
             "apass_subset.csv",
             "wcs_green_solution.fits",
             "wcs_red_solution.fits",
@@ -1720,8 +1865,8 @@ def object_calibration():
     # If user typed paths instead, use those
     elif g_text and r_text:
         
-        full_calibration_with_subid(g_text, "wcs_green_solution.fits", os.environ.get("GREEN_SUBID_NGC"))  # GREEN_SUBID_JUL15  GREEN_SUBID_JUL16 GREEN_SUBID_NGC
-        num_rows = full_calibration_with_subid(r_text, "wcs_red_solution.fits", os.environ.get("RED_SUBID_NGC")) # RED_SUBID_JUL15 RED_SUBID_JUL16 RED_SUBID_NGC
+        full_calibration_with_subid(g_text, "wcs_green_solution.fits", os.environ.get("GREEN_SUBID"))  # GREEN_SUBID_JUL15  GREEN_SUBID_JUL16 GREEN_SUBID_NGC
+        num_rows = full_calibration_with_subid(r_text, "wcs_red_solution.fits", os.environ.get("RED_SUBID")) # RED_SUBID_JUL15 RED_SUBID_JUL16 RED_SUBID_NGC
         
         
         
@@ -1767,7 +1912,7 @@ def object_calibration():
             num_rows = num_rows
 
 
-        standard_g_target, standard_r_target, error_g, error_r, Tgr, Cgr, Tg, Cg, color_term_path, green_offset_path, red_wcs_path, green_wcs_path, last_target_name, last_target_cutout = magnitudes(
+        standard_g_target, standard_r_target, error_g, error_r, Tgr, Cgr, Tg, Cg, color_term_path, green_offset_path, red_wcs_path, green_wcs_path, last_target_name, last_target_cutout, ra_center, dec_center = magnitudes(
             "apass_subset.csv",
             "wcs_green_solution.fits",
             "wcs_red_solution.fits",
@@ -1808,8 +1953,8 @@ def object_calibration():
         r_path_name=r_file,
         g_text_name=g_text,
         r_text_name=r_text,
-
-
+        ra_center=ra_center,
+        dec_center=dec_center
 
     )
 
@@ -2038,6 +2183,49 @@ def star_cluster_calibration():
 
 
 
+@app.route("/calibrate_image", methods=["GET", "POST"])
+def calibrate_image_page():
+    if request.method == "POST":
+        global progress_value, progress_message
+        progress_value = 0 
+        progress_message = "Starting..."
+
+        
+        file = request.files.get("fits_file")
+        if not file:
+            return render_template("calibrate_image.html", error="No file uploaded.")
+
+        # ⭐ Preserve original filename for display
+        original_name = file.filename
+
+        # ⭐ Always overwrite the same uploaded file
+        upload_path = "uploads/uploaded_image.fits"
+        file.save(upload_path)
+
+        # ⭐ Run calibration (always overwrites the same output files)
+        wcs_fits, png_path, ra_center, dec_center, astro_meta = calibrate_image_only(upload_path)
+
+        # ⭐ Convert center coordinates to sexagesimal
+        coord = SkyCoord(ra_center * u.deg, dec_center * u.deg)
+        ra_hms = coord.ra.to_string(unit=u.hour, sep=":", precision=2)
+        dec_dms = coord.dec.to_string(unit=u.deg, sep=":", precision=2, alwayssign=True)
+
+        return render_template(
+            "calibrate_image.html",
+            original_name=original_name,      # ⭐ original uploaded filename
+            uploaded_path=upload_path,        # ⭐ fixed internal filename
+            wcs_fits=wcs_fits,                # ⭐ fixed output filename
+            wcs_png=png_path,                 # ⭐ fixed output PNG
+            ra_center=ra_center,
+            dec_center=dec_center,
+            ra_hms=ra_hms,
+            dec_dms=dec_dms,
+            astro_meta=astro_meta
+        )
+
+    return render_template("calibrate_image.html")
+
+
 @app.route("/status")
 def status():
     global status_message
@@ -2119,11 +2307,6 @@ def convert_radec():
         last_dec_dms = None
 
     return redirect("/aavso_instructions")
-
-
-
-
-
 
 
 

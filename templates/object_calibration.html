@@ -458,6 +458,18 @@
 
         </div>
 
+        {% if ra_center and dec_center %}
+        <div class="results-box">
+            <h3>Image Center</h3>
+
+            <p style="font-size: 20px; color: #9cf;">
+                RA Center: {{ ra_center|round(6) }}°<br>
+                Dec Center: {{ dec_center|round(6) }}°
+            </p>
+        </div>
+        {% endif %}
+
+
 
         {% if last_target_name %}
         <div class="results-box">
@@ -505,17 +517,19 @@
 
 
 
-    {% if red_wcs_path %}
-    <div class="plot-card">
-        <h3>Red WCS Check</h3>
-        <img src="{{ url_for('static', filename=red_wcs_path.split('/')[-1]) }}">
-    </div>
-    {% endif %}
+ 
 
     {% if green_wcs_path %}
     <div class="plot-card">
         <h3>Green WCS Check</h3>
         <img src="{{ url_for('static', filename=green_wcs_path.split('/')[-1]) }}">
+    </div>
+    {% endif %}
+
+    {% if red_wcs_path %}
+    <div class="plot-card">
+        <h3>Red WCS Check</h3>
+        <img src="{{ url_for('static', filename=red_wcs_path.split('/')[-1]) }}">
     </div>
     {% endif %}
 
