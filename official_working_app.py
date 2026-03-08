@@ -1662,7 +1662,9 @@ def star_cluster_magnitudes(
 
 
 
-
+#============================
+# Create and running app using flask
+#============================
 
 app = Flask(__name__)
 
@@ -1959,8 +1961,9 @@ def object_calibration():
     )
 
 
-
+#============================
 # FOR STAR CLUSTER 
+#============================
 @app.route("/star_cluster_calibration", methods=["GET", "POST"])
 def star_cluster_calibration():
     user_text = None
@@ -2181,7 +2184,9 @@ def star_cluster_calibration():
     return render_template("star_cluster_calibration.html")
 
 
-
+#============================
+# FOR CALIBRATING IMAGES
+#============================
 
 @app.route("/calibrate_image", methods=["GET", "POST"])
 def calibrate_image_page():
@@ -2239,9 +2244,9 @@ def progress_status():
         "progress": progress_value
     })
 
-
-
-
+# ============================
+# For transferring the data to submission page
+# ============================
 
 @app.route("/aavso_instructions")
 def aavso_instructions():
@@ -2307,8 +2312,6 @@ def convert_radec():
         last_dec_dms = None
 
     return redirect("/aavso_instructions")
-
-
 
 
 if __name__ == "__main__":
