@@ -223,5 +223,5 @@ uploads/uploaded_red.fits
 calibration_stars.csv
 cluster_calibrated_magnitudes.csv
 cluster_stars.csv
-
+test.py
 static/
