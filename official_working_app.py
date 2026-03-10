@@ -64,7 +64,9 @@ def update_progress(value, message):
         progress_value += value
         progress_message = message
 
-
+#=========================================
+# Working with Astronometry and APASS APIs 
+#=========================================
 
 def login_to_astrometry(api_key: str) -> str:
 	url = 'http://nova.astrometry.net/api/login'
@@ -147,8 +149,6 @@ def wait_for_job(sub_id, timeout=180):
 
     raise TimeoutError("Job did not appear in time.")
 
-         
-
 
 def wait_for_calibration(job_id, timeout=180):
     url = f"http://nova.astrometry.net/api/jobs/{job_id}/calibration/"
@@ -165,7 +165,6 @@ def wait_for_calibration(job_id, timeout=180):
         time.sleep(2)
 
     return None
-
 
 
 def apply_calibration_to_fits(input_fits, output_fits, job_id):
@@ -258,7 +257,6 @@ def query_apass_to_csv(ra_center, dec_center, radius_deg, output_csv="apass_subs
     return num_rows - 2
 
 
-
 def full_calibration_with_subid(image, wcs_image_name, subid_key):
     global status_message
 
@@ -329,7 +327,9 @@ def full_calibration_with_subid(image, wcs_image_name, subid_key):
     
     return num_rows
 
-
+#=========================================
+# Gathering specific information from APIs 
+#=========================================
 
 def full_calibration(image, wcs_image_name):
     global status_message
@@ -1662,7 +1662,9 @@ def star_cluster_magnitudes(
 
 
 
-
+#============================
+# Create and running app using flask
+#============================
 
 app = Flask(__name__)
 
@@ -1808,10 +1810,10 @@ def object_calibration():
 
     # If user uploaded files, use those
     if g_path and r_path:
-        #full_calibration_with_subid(g_path, "wcs_green_solution.fits", os.environ.get("GREEN_SUBID_JUL15")) 
-        #num_rows = full_calibration_with_subid(r_path, "wcs_red_solution.fits", os.environ.get("RED_SUBID_JUL15")) 
-        full_calibration(g_path, "wcs_green_solution.fits")
-        num_rows =full_calibration(r_path, "wcs_red_solution.fits")
+        full_calibration_with_subid(g_path, "wcs_green_solution.fits", os.environ.get("GREEN_SUBID")) 
+        num_rows = full_calibration_with_subid(r_path, "wcs_red_solution.fits", os.environ.get("RED_SUBID")) 
+        #full_calibration(g_path, "wcs_green_solution.fits")
+        #num_rows =full_calibration(r_path, "wcs_red_solution.fits")
 
         # ============================
         # CHECK IF TARGET IS IN IMAGE
@@ -1959,8 +1961,9 @@ def object_calibration():
     )
 
 
-
+#============================
 # FOR STAR CLUSTER 
+#============================
 @app.route("/star_cluster_calibration", methods=["GET", "POST"])
 def star_cluster_calibration():
     user_text = None
@@ -2181,7 +2184,9 @@ def star_cluster_calibration():
     return render_template("star_cluster_calibration.html")
 
 
-
+#============================
+# FOR CALIBRATING IMAGES
+#============================
 
 @app.route("/calibrate_image", methods=["GET", "POST"])
 def calibrate_image_page():
@@ -2239,9 +2244,9 @@ def progress_status():
         "progress": progress_value
     })
 
-
-
-
+# ============================
+# For transferring the data to submission page
+# ============================
 
 @app.route("/aavso_instructions")
 def aavso_instructions():
@@ -2307,8 +2312,6 @@ def convert_radec():
         last_dec_dms = None
 
     return redirect("/aavso_instructions")
-
-
 
 
 if __name__ == "__main__":
