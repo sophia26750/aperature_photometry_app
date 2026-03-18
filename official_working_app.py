@@ -1867,8 +1867,8 @@ def object_calibration():
     # If user typed paths instead, use those
     elif g_text and r_text:
         
-        full_calibration_with_subid(g_text, "wcs_green_solution.fits", os.environ.get("GREEN_SUBID"))  # GREEN_SUBID_JUL15  GREEN_SUBID_JUL16 GREEN_SUBID_NGC
-        num_rows = full_calibration_with_subid(r_text, "wcs_red_solution.fits", os.environ.get("RED_SUBID")) # RED_SUBID_JUL15 RED_SUBID_JUL16 RED_SUBID_NGC
+        full_calibration_with_subid(g_text, "wcs_green_solution.fits", os.environ.get("GREEN_SUBID_JUL15"))  # GREEN_SUBID_JUL15  GREEN_SUBID_JUL16 GREEN_SUBID_NGC
+        num_rows = full_calibration_with_subid(r_text, "wcs_red_solution.fits", os.environ.get("RED_SUBID_JUL15")) # RED_SUBID_JUL15 RED_SUBID_JUL16 RED_SUBID_NGC
         
         
         
@@ -2315,6 +2315,6 @@ def convert_radec():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
 
 

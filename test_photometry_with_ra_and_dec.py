@@ -449,6 +449,69 @@ def show_flux_cutouts(image, x, y, radius, n_show=12):
     plt.show()
 
 
+def show_three_labeled_stars(image, x, y, radius=5, n_show=3):
+    """
+    Show n_show stars in SEPARATE figures.
+    Each figure includes:
+        - yellow aperture
+        - cyan annulus
+        - red pixel labels (4 decimals)
+    """
+
+    data = fits.getdata(image)
+    ny, nx = data.shape
+
+    N = len(x)
+    n_show = min(n_show, N)
+
+    # Randomly choose stars
+    idx = np.random.choice(N, n_show, replace=False)
+
+    for count, i in enumerate(idx):
+        cx, cy = x[i], y[i]
+
+        # Zoom window
+        half = int(radius * 4)
+        x1, x2 = int(cx - half), int(cx + half)
+        y1, y2 = int(cy - half), int(cy + half)
+
+        x1 = max(x1, 0); y1 = max(y1, 0)
+        x2 = min(x2, nx); y2 = min(y2, ny)
+
+        cut = data[y1:y2, x1:x2]
+
+        plt.figure(figsize=(6, 6))
+        plt.imshow(cut, cmap="gray", origin="lower",
+                   vmin=np.percentile(cut, 5),
+                   vmax=np.percentile(cut, 99))
+
+        # --- Aperture ring (yellow) ---
+        circ = plt.Circle((cx - x1, cy - y1), radius,
+                          edgecolor='yellow', facecolor='none', lw=1.5)
+        plt.gca().add_patch(circ)
+
+        # --- Annulus rings (cyan) ---
+        ann1 = plt.Circle((cx - x1, cy - y1), radius+3,
+                          edgecolor='cyan', facecolor='none', lw=1)
+        ann2 = plt.Circle((cx - x1, cy - y1), radius+6,
+                          edgecolor='cyan', facecolor='none', lw=1)
+        plt.gca().add_patch(ann1)
+        plt.gca().add_patch(ann2)
+
+        # --- Pixel labels (red, tiny) ---
+        for j in range(cut.shape[0]):
+            for ii in range(cut.shape[1]):
+                plt.text(ii, j, f"{cut[j, ii]:.4f}",
+                         color="red",
+                         fontsize=3,
+                         ha="center", va="center")
+
+        plt.title(f"Star {i}")
+        plt.xticks([]); plt.yticks([])
+        plt.tight_layout()
+        plt.show()
+
+
 def lsrl(x, y):
     x = np.array(x)
     y = np.array(y)
@@ -788,6 +851,13 @@ def magnitudes(csv_file, green_image, red_image, n, RA, DEC):
     Cgr = m1_b1[1]
     Tg  = m2_b2[0]
     Cg  = m2_b2[1]
+
+    show_three_labeled_stars("wcs_green_solution.fits", x_green, y_green, radius=5, n_show=3)
+    show_three_labeled_stars("wcs_red_solution.fits", x_red, y_red, radius=5, n_show=3)
+
+
+
+
 
     
     print("\n===== DEBUG OUTPUT =====")
