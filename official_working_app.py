@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, jsonify
 from flask import redirect
 
+from dotenv import load_dotenv
 
 import requests
 import json
 import os
+load_dotenv()
 
 import time
 import random
