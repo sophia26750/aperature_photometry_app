@@ -37,6 +37,8 @@ matplotlib.use("Agg")
 
 from photutils.detection import DAOStarFinder
 
+os.makedirs("static", exist_ok=True)
+
 
 global status_message
 global last_jd
